@@ -1,0 +1,39 @@
+name: Bundle Full HD encoder
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/bundle-fullhd.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned browser encoder and bundler
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts mediabunny@1.31.2 esbuild@0.25.12
+      - name: Build local browser module
+        run: |
+          mkdir -p vendor
+          ./node_modules/.bin/esbuild node_modules/mediabunny/dist/modules/src/index.js --bundle --format=esm --platform=browser --target=es2022 --minify --outfile=vendor/mediabunny.js
+          test -s vendor/mediabunny.js
+      - name: Commit generated module
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add vendor/mediabunny.js
+          if ! git diff --cached --quiet; then
+            git commit -m "Bundle Mediabunny locally for Full HD test"
+            git push
+          fi
