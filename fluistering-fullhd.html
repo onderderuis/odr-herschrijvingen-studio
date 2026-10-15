@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>De Fluistering — Full HD export</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{font-family:"DM Sans",system-ui,sans-serif;color:#eee2d5;background:#18110e}*{box-sizing:border-box}body{margin:0}main{max-width:1160px;margin:auto;padding:34px 22px 70px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}.eyebrow{font-size:11px;letter-spacing:.25em;color:#c7a68d}.tabs{display:flex;flex-wrap:wrap;gap:7px}.tabs a{border:1px solid #614536;color:#e8d5c6;border-radius:9px;padding:10px 12px;font-size:12px;text-decoration:none}.tabs a.active{background:#e8d5c6;color:#271911}h1{font-size:clamp(32px,4vw,46px);font-weight:500;letter-spacing:-.045em;margin:20px 0 4px}p{line-height:1.55;color:#bea897}.layout{display:grid;grid-template-columns:minmax(260px,400px) minmax(320px,1fr);gap:30px;align-items:start;margin-top:24px}.preview{width:100%;max-width:400px;margin:auto}canvas{width:100%;height:auto;display:block;background:#271911;border:1px solid #634434}.meta{display:flex;justify-content:space-between;font-size:12px;color:#b9a28f;margin-top:10px}.panel{padding:26px;background:#261a14;border:1px solid #50382c;border-radius:17px}label{font-size:13px;display:block;margin:0 0 9px;color:#e6d0bf}input[type=file],textarea,select{font:inherit;color:#f0e2d6;background:#34251d;border:1px solid #775743;border-radius:9px;padding:12px;width:100%}input[type=file]{font-size:12px}textarea{resize:vertical;min-height:85px}select{font-size:14px}.group{margin-bottom:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.check{display:flex;gap:9px;align-items:center;font-size:13px;color:#e6d0bf;margin:15px 0}.check input{accent-color:#d6bca7}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}button{font:600 14px "DM Sans",sans-serif;padding:13px 16px;border-radius:9px;border:1px solid #987b66;background:transparent;color:#f1e4d8;cursor:pointer}button.primary{background:#e9d8c8;color:#271911;border-color:#e9d8c8}button:disabled{opacity:.45;cursor:wait}.hint{font-size:12px;color:#b69d8c}strong{color:#f1e4d8;font-weight:500}@media(max-width:760px){.layout{grid-template-columns:1fr}.preview{max-width:340px}.panel{padding:18px}}
+</style></head>
+<body><main><div class="top"><div class="eyebrow">ONDER DE RUIS / STUDIO</div><nav class="tabs"><a href="./">De Herschrijving</a><a href="doorhaling.html">De Doorhaling</a><a class="active" href="fluistering.html">De Fluistering</a></nav></div>
+<h1>De Fluistering / Full HD.</h1><p>Experimentele export op volledige resolutie. De gewone studio blijft ongewijzigd.</p>
+<div class="layout"><div class="preview"><canvas id="cv" width="1080" height="1920" aria-label="De dunne ODR-lijn beweegt op de stem"></canvas><div class="meta"><span>REEL · 1080 × 1920</span><span id="clock">00:00</span></div></div>
+<section class="panel">
+<div class="group"><label for="audio">01 / Upload je stemopname</label><input id="audio" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg"><p class="hint">WAV of MP3 aanbevolen. Het bestand blijft in je browser.</p></div>
+<div class="group"><label for="thought">02 / Gedachte (optioneel zichtbaar aan het einde)</label><textarea id="thought">je hoeft niet altijd op de voorgrond te staan.</textarea></div>
+<div class="grid">
+<div><label for="movement">Beweging</label><select id="movement"><option value="quiet">Heel subtiel</option><option value="soft" selected>Subtiel</option><option value="alive">Iets levendiger</option></select></div>
+<div><label for="tail">Stilte na de stem</label><select id="tail"><option value="1.5">1,5 seconden</option><option value="3" selected>3 seconden</option><option value="4">4 seconden</option></select></div>
+</div>
+<label class="check"><input id="showThought" type="checkbox" checked> Toon de gedachte na de stem (standaard aan; ook in de export)</label>
+<label class="check"><input id="signature" type="checkbox" checked> Kleine ‘onder de ruis.’-signatuur</label>
+<div class="actions"><button id="play">▶ Bekijk en beluister</button><button class="primary" id="hqExport">↓ Maak 1080 × 1920 MP4</button><button id="export">Standaardexport</button><button id="stop">Stop</button></div>
+<p class="hint" id="status" role="status">Upload een opname om de lijn op je stem te laten reageren.</p>
+<p class="hint">De ODR-lijn blijft flinterdun en wordt vlak wanneer de gedachte verschijnt. De export houdt de audiostream ook tijdens de afsluitende stilte actief. Op iPhone kan de browser de exportresolutie verlagen, ook als het canvas 1080 × 1920 is. Deze aparte export gebruikt een lokaal gehoste encoder en rendert elk frame op volledige resolutie. De standaardexport blijft beschikbaar.</p>
+</section></div></main>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d');
+let previewAudio=null,previewUrl=null,audioBuffer=null,envelope=null,audioCtx=null,source=null,recorder=null,stream=null,raf=0,running=false;
+const W=1080,H=1920,TAU=Math.PI*2;
+const bg=()=>{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#241811');g.addColorStop(.65,'#2d1d16');g.addColorStop(1,'#211711');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)};
+function amp(t){if(!envelope||t<0)return 0;const index=Math.floor(t*100);return envelope[Math.min(envelope.length-1,index)]||0}
+function render(t=0,duration=0){
+ bg();const midY=H*.49,cx=W/2,width=W*.45;
+ const intensity=({quiet:9,soft:17,alive:28}[$('movement').value]||17);
+ const energy=amp(t),revealed=$('showThought').checked&&audioBuffer&&t>=audioBuffer.duration+.25,active=revealed?0:Math.min(1,Math.pow(energy, .68)*2.8);
+ ctx.beginPath();ctx.lineWidth=1.6;ctx.strokeStyle='#e8d9cb';ctx.lineCap='round';ctx.lineJoin='round';
+ for(let i=0;i<=280;i++){
+  const u=i/280,edge=Math.pow(Math.sin(Math.PI*u),1.4);
+  const wave=Math.sin(u*TAU*2.25-t*2.1)*.52+Math.sin(u*TAU*3.8+t*1.3)*.29+Math.sin(u*TAU*6.1-t*.8)*.19;
+  const x=cx-width/2+u*width,y=midY+edge*wave*intensity*active;
+  if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+ }ctx.stroke();
+ if($('signature').checked){ctx.fillStyle='#d5bca8';ctx.textAlign='left';ctx.font='400 22px "DM Sans",sans-serif';ctx.fillText('onder de ruis.',112,H-145)}
+ if($('showThought').checked&&audioBuffer&&t>=audioBuffer.duration+.25){
+  const text=$('thought').value.trim(),max=820;let font=40,lines=[];
+  ctx.textAlign='center';ctx.fillStyle='#f0e1d4';
+  for(;font>=28;font-=2){ctx.font='400 '+font+'px "DM Sans",sans-serif';lines=[];let line='';for(const word of text.split(/\s+/)){const test=line?line+' '+word:word;if(ctx.measureText(test).width>max&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);if(lines.length>1&&lines[lines.length-1].split(' ').length===1){const previous=lines[lines.length-2].split(' ');if(previous.length>1){lines[lines.length-1]=previous.pop()+' '+lines[lines.length-1];lines[lines.length-2]=previous.join(' ')}}if(lines.length<=4&&!(lines.length>1&&lines[lines.length-1].split(' ').length===1))break}
+  const first=H*.62-lines.length*font*.7;lines.forEach((line,i)=>ctx.fillText(line,cx,first+i*font*1.5));
+ }
+ $('clock').textContent='00:'+String(Math.floor(t)).padStart(2,'0');
+}
+async function decode(file){const data=await file.arrayBuffer();const temp=new (window.AudioContext||window.webkitAudioContext)();try{const buffer=await temp.decodeAudioData(data);if(!buffer.duration||!Number.isFinite(buffer.duration))throw Error('Ongeldige audiolengte');const hop=Math.max(1,Math.floor(buffer.sampleRate/100)),n=Math.ceil(buffer.length/hop),env=new Float32Array(n);for(let k=0;k<n;k++){let sum=0,count=0;const start=k*hop,end=Math.min(buffer.length,start+hop);for(let i=start;i<end;i+=4){let value=0;for(let ch=0;ch<buffer.numberOfChannels;ch++)value+=Math.abs(buffer.getChannelData(ch)[i])/buffer.numberOfChannels;sum+=value;count++}env[k]=count?sum/count:0}const sorted=Array.from(env).sort((a,b)=>a-b),p=sorted[Math.floor(sorted.length*.95)]||.01;for(let i=0;i<env.length;i++)env[i]=Math.min(1,env[i]/Math.max(.008,p));let smooth=0;for(let i=0;i<env.length;i++){smooth=smooth*.83+env[i]*.17;env[i]=smooth}return {buffer,env}}finally{await temp.close()}}
+function stop(){running=false;if(previewAudio){previewAudio.pause();previewAudio.currentTime=0;}cancelAnimationFrame(raf);if(source){try{source.stop()}catch(e){}source.disconnect();source=null}if(recorder&&recorder.state==='recording')recorder.stop();if(audioCtx){audioCtx.close().catch(()=>{});audioCtx=null}if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('play').disabled=false;$('export').disabled=false}
+$('audio').addEventListener('change',async e=>{stop();audioBuffer=null;envelope=null;const file=e.target.files?.[0];if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null}if(!file)return;previewUrl=URL.createObjectURL(file);previewAudio=new Audio(previewUrl);previewAudio.preload='auto';$('status').textContent='Opname wordt geanalyseerd…';try{const r=await decode(file);audioBuffer=r.buffer;envelope=r.env;$('status').textContent='Opname geladen: '+audioBuffer.duration.toFixed(1)+' seconden. Klaar voor voorvertoning.';render()}catch(err){$('status').textContent='Kon deze audio niet openen. Probeer WAV of MP3. ('+err.message+')'}});
+async function start(exporting){
+ if(!audioBuffer){$('status').textContent='Upload eerst een opname.';return}
+ if(running)stop();running=true;$('play').disabled=true;$('export').disabled=true;
+ if(!exporting){
+  try{
+   if(!previewAudio)throw Error('Geen audio geselecteerd.');
+   previewAudio.currentTime=0;previewAudio.muted=false;previewAudio.volume=1;
+   await previewAudio.play();
+   const tail=Number($('tail').value),total=audioBuffer.duration+tail+.5;
+   let endedAt=null;
+   const previewTick=()=>{
+    if(!running)return;
+    const now=performance.now();
+    if(previewAudio.ended&&endedAt===null)endedAt=now;
+    const t=endedAt===null?previewAudio.currentTime:audioBuffer.duration+(now-endedAt)/1000;
+    render(t,total);
+    if(t<total)raf=requestAnimationFrame(previewTick);
+    else{running=false;$('play').disabled=false;$('export').disabled=false;$('status').textContent='Voorvertoning afgerond.'}
+   };
+   $('status').textContent='Voorvertoning speelt met geluid af…';
+   raf=requestAnimationFrame(previewTick);
+  }catch(e){stop();$('status').textContent='Audio afspelen mislukt: '+e.message}
+  return;
+ }
+ try{
+ audioCtx=new (window.AudioContext||window.webkitAudioContext)();await audioCtx.resume();
+ source=audioCtx.createBufferSource();
+ const destination=audioCtx.createMediaStreamDestination();source.connect(destination);
+ if(!exporting)source.connect(audioCtx.destination);
+ const tail=Number($('tail').value),total=audioBuffer.duration+tail+0.5;
+ // Keep the original audio source active until the closing text is finished.
+ const sr=audioBuffer.sampleRate,frames=Math.ceil(total*sr);
+ const padded=audioCtx.createBuffer(audioBuffer.numberOfChannels,frames,sr);
+ for(let ch=0;ch<audioBuffer.numberOfChannels;ch++){
+  const target=padded.getChannelData(ch);
+  target.set(audioBuffer.getChannelData(ch));
+  for(let j=audioBuffer.length;j<frames;j++)target[j]=0.0000002*Math.sin(2*Math.PI*180*(j-audioBuffer.length)/sr);
+ }
+ source.buffer=padded;
+ let chunks=[],mime='',ext='webm';
+ if(exporting){
+  if(!cv.captureStream||!window.MediaRecorder)throw Error('Deze browser ondersteunt geen video-opname van het canvas.');
+  stream=cv.captureStream(30);const videoTrack=stream.getVideoTracks()[0];if(videoTrack?.applyConstraints){try{await videoTrack.applyConstraints({width:{ideal:1080},height:{ideal:1920},frameRate:{ideal:30}})}catch(e){/* Browser may downscale canvas capture */}}destination.stream.getAudioTracks().forEach(track=>stream.addTrack(track));
+  const types=['video/mp4;codecs="avc1.42E01E,mp4a.40.2"','video/mp4;codecs="avc1,mp4a.40.2"','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  mime=types.find(t=>MediaRecorder.isTypeSupported(t))||'';
+  if(!mime)throw Error('Geen geschikt exportformaat gevonden.');
+  recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5500000});
+  recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+  recorder.onstop=()=>{if(!chunks.length){$('status').textContent='De opname bevat geen video.';return}const actual=recorder.mimeType||mime;ext=actual.includes('mp4')?'mp4':'webm';const blob=new Blob(chunks,{type:actual}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ODR-De-Fluistering.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);$('status').textContent=ext==='mp4'?'MP4 met geluid geëxporteerd. De browser kan de resolutie beperken; controleer de video-eigenschappen.':'WebM met geluid geëxporteerd. Voor Instagram omzetten naar H.264-MP4.'};
+  recorder.start(250);
+ }
+ const startAt=audioCtx.currentTime+.12;
+ // Keep an active audio source connected throughout the closing silence.
+ // On iOS Safari, a MediaRecorder can truncate the recording as soon as the spoken buffer ends.
+ source.start(startAt);
+ const tick=()=>{if(!running)return;const t=Math.max(0,audioCtx.currentTime-startAt);render(t,total);if(t<total){raf=requestAnimationFrame(tick)}else{running=false;if(exporting&&recorder?.state==='recording')recorder.stop();if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}source?.disconnect();source=null;audioCtx?.close().catch(()=>{});audioCtx=null;$('play').disabled=false;$('export').disabled=false;if(!exporting)$('status').textContent='Voorvertoning afgerond.'}};
+ raf=requestAnimationFrame(tick);$('status').textContent=exporting?'Video en geluid worden opgenomen…':'Voorvertoning speelt af…';
+ }catch(e){stop();$('status').textContent='Kan niet starten: '+e.message}
+}
+async function fullHD(){
+ if(!audioBuffer){$('status').textContent='Upload eerst een opname.';return}
+ if(running)return;
+ const button=$('hqExport');button.disabled=true;$('export').disabled=true;$('play').disabled=true;running=true;
+ try{
+  if(!window.VideoEncoder||!window.AudioEncoder)throw Error('WebCodecs wordt op dit apparaat niet ondersteund.');
+  const mod=await import('./vendor/mediabunny.js');
+  const {Output,Mp4OutputFormat,BufferTarget,CanvasSource,AudioBufferSource}=mod;
+  const videoSupport=await VideoEncoder.isConfigSupported({codec:'avc1.640028',width:1080,height:1920,bitrate:6000000,framerate:30});
+  if(!videoSupport.supported)throw Error('De iPhone ondersteunt geen Full HD H.264-encoder.');
+  const output=new Output({format:new Mp4OutputFormat(),target:new BufferTarget()});
+  const video=new CanvasSource(cv,{codec:'avc',bitrate:6000000});
+  const audio=new AudioBufferSource({codec:'aac',bitrate:160000});
+  output.addVideoTrack(video,{frameRate:30});
+  output.addAudioTrack(audio);
+  const tail=Number($('tail').value),total=audioBuffer.duration+tail+.5;
+  const sr=audioBuffer.sampleRate,frames=Math.ceil(total*sr);
+  const padded=new AudioBuffer({length:frames,numberOfChannels:audioBuffer.numberOfChannels,sampleRate:sr});
+  for(let ch=0;ch<audioBuffer.numberOfChannels;ch++)padded.getChannelData(ch).set(audioBuffer.getChannelData(ch));
+  await output.start();
+  await audio.add(padded);
+  const fps=30,n=Math.ceil(total*fps);
+  for(let i=0;i<n;i++){
+   const t=i/fps;render(t,total);
+   await video.add(t,1/fps);
+   if(i%10===0){$('status').textContent='Full HD renderen: '+Math.round(i/n*100)+'%';await new Promise(r=>setTimeout(r,0))}
+  }
+  await output.finalize();
+  const blob=new Blob([output.target.buffer],{type:'video/mp4'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ODR-De-Fluistering-FullHD.mp4';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  $('status').textContent='Full HD MP4 geëxporteerd. Controleer het bestand op je iPhone.';
+ }catch(e){$('status').textContent='Full HD niet gelukt: '+e.message+' De standaardexport blijft beschikbaar.'}
+ finally{running=false;button.disabled=false;$('export').disabled=false;$('play').disabled=false;render(0)}
+}
+$('hqExport').onclick=fullHD;
+$('play').onclick=()=>start(false);$('export').onclick=()=>start(true);$('stop').onclick=()=>{stop();$('status').textContent='Gestopt.'};
+['movement','signature','showThought','thought'].forEach(id=>$(id).addEventListener('input',()=>{if(!running)render()}));render();document.fonts.ready.then(()=>{if(!running)render()});
+})();
+</script></body></html>
