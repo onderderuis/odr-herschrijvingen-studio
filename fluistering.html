@@ -18,14 +18,14 @@
 </div>
 <label class="check"><input id="showThought" type="checkbox" checked> Toon de gedachte na de stem (standaard aan; ook in de export)</label>
 <label class="check"><input id="signature" type="checkbox" checked> Kleine ‘onder de ruis.’-signatuur</label>
-<div class="actions"><button id="play">▶ Bekijk en beluister</button><button class="primary" id="hqExport">↓ Exporteer 1080p MP4</button><button id="export">Alternatieve export</button><button id="stop">Stop</button></div>
+<div class="actions"><button id="play">▶ Bekijk en beluister</button><button class="primary" id="export">↓ Exporteer video met geluid</button><button id="stop">Stop</button></div>
 <p class="hint" id="status" role="status">Upload een opname om de lijn op je stem te laten reageren.</p>
-<p class="hint">De ODR-lijn blijft flinterdun en wordt vlak wanneer de gedachte verschijnt. De export houdt de audiostream ook tijdens de afsluitende stilte actief. Op iPhone kan de browser de exportresolutie verlagen, ook als het canvas 1080 × 1920 is. De nieuwe 1080p-export rendert elk frame rechtstreeks als H.264-MP4 met AAC-geluid. Als je iPhone dat niet ondersteunt, kun je de alternatieve export gebruiken.</p>
+<p class="hint">De ODR-lijn blijft flinterdun en wordt vlak wanneer de gedachte verschijnt. De export houdt de audiostream ook tijdens de afsluitende stilte actief. Op iPhone kan de browser de exportresolutie verlagen, ook als het canvas 1080 × 1920 is. De standaardexport is de werkende iPhone-methode. De browser kan de resolutie verlagen; een gegarandeerde 1080p-export vraagt een andere encoder.</p>
 </section></div></main>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d');
-let audioBuffer=null,envelope=null,audioCtx=null,source=null,recorder=null,stream=null,raf=0,running=false;
+let previewAudio=null,previewUrl=null,audioBuffer=null,envelope=null,audioCtx=null,source=null,recorder=null,stream=null,raf=0,running=false;
 const W=1080,H=1920,TAU=Math.PI*2;
 const bg=()=>{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#241811');g.addColorStop(.65,'#2d1d16');g.addColorStop(1,'#211711');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)};
 function amp(t){if(!envelope||t<0)return 0;const index=Math.floor(t*100);return envelope[Math.min(envelope.length-1,index)]||0}
@@ -50,11 +50,32 @@ function render(t=0,duration=0){
  $('clock').textContent='00:'+String(Math.floor(t)).padStart(2,'0');
 }
 async function decode(file){const data=await file.arrayBuffer();const temp=new (window.AudioContext||window.webkitAudioContext)();try{const buffer=await temp.decodeAudioData(data);if(!buffer.duration||!Number.isFinite(buffer.duration))throw Error('Ongeldige audiolengte');const hop=Math.max(1,Math.floor(buffer.sampleRate/100)),n=Math.ceil(buffer.length/hop),env=new Float32Array(n);for(let k=0;k<n;k++){let sum=0,count=0;const start=k*hop,end=Math.min(buffer.length,start+hop);for(let i=start;i<end;i+=4){let value=0;for(let ch=0;ch<buffer.numberOfChannels;ch++)value+=Math.abs(buffer.getChannelData(ch)[i])/buffer.numberOfChannels;sum+=value;count++}env[k]=count?sum/count:0}const sorted=Array.from(env).sort((a,b)=>a-b),p=sorted[Math.floor(sorted.length*.95)]||.01;for(let i=0;i<env.length;i++)env[i]=Math.min(1,env[i]/Math.max(.008,p));let smooth=0;for(let i=0;i<env.length;i++){smooth=smooth*.83+env[i]*.17;env[i]=smooth}return {buffer,env}}finally{await temp.close()}}
-function stop(){running=false;cancelAnimationFrame(raf);if(source){try{source.stop()}catch(e){}source.disconnect();source=null}if(recorder&&recorder.state==='recording')recorder.stop();if(audioCtx){audioCtx.close().catch(()=>{});audioCtx=null}if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('play').disabled=false;$('export').disabled=false;$('hqExport').disabled=false}
-$('audio').addEventListener('change',async e=>{stop();audioBuffer=null;envelope=null;const file=e.target.files?.[0];if(!file)return;$('status').textContent='Opname wordt geanalyseerd…';try{const r=await decode(file);audioBuffer=r.buffer;envelope=r.env;$('status').textContent='Opname geladen: '+audioBuffer.duration.toFixed(1)+' seconden. Klaar voor voorvertoning.';render()}catch(err){$('status').textContent='Kon deze audio niet openen. Probeer WAV of MP3. ('+err.message+')'}});
+function stop(){running=false;if(previewAudio){previewAudio.pause();previewAudio.currentTime=0;}cancelAnimationFrame(raf);if(source){try{source.stop()}catch(e){}source.disconnect();source=null}if(recorder&&recorder.state==='recording')recorder.stop();if(audioCtx){audioCtx.close().catch(()=>{});audioCtx=null}if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('play').disabled=false;$('export').disabled=false}
+$('audio').addEventListener('change',async e=>{stop();audioBuffer=null;envelope=null;const file=e.target.files?.[0];if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null}if(!file)return;previewUrl=URL.createObjectURL(file);previewAudio=new Audio(previewUrl);previewAudio.preload='auto';$('status').textContent='Opname wordt geanalyseerd…';try{const r=await decode(file);audioBuffer=r.buffer;envelope=r.env;$('status').textContent='Opname geladen: '+audioBuffer.duration.toFixed(1)+' seconden. Klaar voor voorvertoning.';render()}catch(err){$('status').textContent='Kon deze audio niet openen. Probeer WAV of MP3. ('+err.message+')'}});
 async function start(exporting){
  if(!audioBuffer){$('status').textContent='Upload eerst een opname.';return}
  if(running)stop();running=true;$('play').disabled=true;$('export').disabled=true;
+ if(!exporting){
+  try{
+   if(!previewAudio)throw Error('Geen audio geselecteerd.');
+   previewAudio.currentTime=0;previewAudio.muted=false;previewAudio.volume=1;
+   await previewAudio.play();
+   const tail=Number($('tail').value),total=audioBuffer.duration+tail+.5;
+   let endedAt=null;
+   const previewTick=()=>{
+    if(!running)return;
+    const now=performance.now();
+    if(previewAudio.ended&&endedAt===null)endedAt=now;
+    const t=endedAt===null?previewAudio.currentTime:audioBuffer.duration+(now-endedAt)/1000;
+    render(t,total);
+    if(t<total)raf=requestAnimationFrame(previewTick);
+    else{running=false;$('play').disabled=false;$('export').disabled=false;$('status').textContent='Voorvertoning afgerond.'}
+   };
+   $('status').textContent='Voorvertoning speelt met geluid af…';
+   raf=requestAnimationFrame(previewTick);
+  }catch(e){stop();$('status').textContent='Audio afspelen mislukt: '+e.message}
+  return;
+ }
  try{
  audioCtx=new (window.AudioContext||window.webkitAudioContext)();await audioCtx.resume();
  source=audioCtx.createBufferSource();
@@ -90,50 +111,6 @@ async function start(exporting){
  raf=requestAnimationFrame(tick);$('status').textContent=exporting?'Video en geluid worden opgenomen…':'Voorvertoning speelt af…';
  }catch(e){stop();$('status').textContent='Kan niet starten: '+e.message}
 }
-async function exportFullHD(){
- if(!audioBuffer){$('status').textContent='Upload eerst een opname.';return}
- if(running)stop();
- running=true;$('play').disabled=true;$('export').disabled=true;$('hqExport').disabled=true;
- try{
-  $('status').textContent='1080p-encoder laden…';
-  const {Output,Mp4OutputFormat,BufferTarget,CanvasSource,AudioBufferSource,Quality,getFirstEncodableVideoCodec,getFirstEncodableAudioCodec}=await import('https://esm.sh/mediabunny@1.31.2?bundle');
-  const format=new Mp4OutputFormat();
-  const videoCodec=await getFirstEncodableVideoCodec(['avc'],{width:1080,height:1920});
-  const audioCodec=await getFirstEncodableAudioCodec(['aac']);
-  if(videoCodec!=='avc'||audioCodec!=='aac')throw Error('Deze browser kan 1080p H.264 met AAC niet rechtstreeks coderen. Gebruik de alternatieve export.');
-  const output=new Output({format,target:new BufferTarget()});
-  const video=new CanvasSource(cv,{codec:'avc',quality:new Quality('high')});
-  const audio=new AudioBufferSource({codec:'aac',quality:new Quality('high')});
-  output.addVideoTrack(video,{frameRate:24});
-  output.addAudioTrack(audio);
-  const tail=Number($('tail').value),total=audioBuffer.duration+tail+.5;
-  const sr=audioBuffer.sampleRate,frames=Math.ceil(total*sr);
-  const padded=new AudioBuffer({length:frames,numberOfChannels:audioBuffer.numberOfChannels,sampleRate:sr});
-  for(let ch=0;ch<audioBuffer.numberOfChannels;ch++)padded.getChannelData(ch).set(audioBuffer.getChannelData(ch));
-  await output.start();
-  await audio.add(padded);
-  const fps=24,count=Math.ceil(total*fps);
-  for(let f=0;f<count;f++){
-   if(!running)throw Error('Export gestopt.');
-   const t=f/fps;
-   render(t,total);
-   await video.add(t,1/fps);
-   if(f%12===0){
-    $('status').textContent='1080p-video maken: '+Math.round(100*f/count)+'%';
-    await new Promise(resolve=>setTimeout(resolve,0));
-   }
-  }
-  $('status').textContent='MP4 afronden…';
-  await output.finalize();
-  const blob=new Blob([output.target.buffer],{type:'video/mp4'});
-  const url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download='ODR-De-Fluistering-1080p.mp4';document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),60000);
-  $('status').textContent='1080 × 1920 MP4 met H.264-video en AAC-geluid gemaakt ('+total.toFixed(1)+' sec).';
- }catch(e){$('status').textContent='1080p-export niet gelukt: '+e.message+' De alternatieve export blijft beschikbaar.'}
- finally{running=false;$('play').disabled=false;$('export').disabled=false;$('hqExport').disabled=false;render(0)}
-}
-$('hqExport').onclick=exportFullHD;
 $('play').onclick=()=>start(false);$('export').onclick=()=>start(true);$('stop').onclick=()=>{stop();$('status').textContent='Gestopt.'};
 ['movement','signature','showThought','thought'].forEach(id=>$(id).addEventListener('input',()=>{if(!running)render()}));render();document.fonts.ready.then(()=>{if(!running)render()});
 })();
