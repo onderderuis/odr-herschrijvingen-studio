@@ -6,7 +6,7 @@
 </style></head><body><main>
 <div class="eyebrow">ONDER DE RUIS / STUDIO</div><h1>De Herschrijving.</h1><p>Een gedachte verschijnt. Er valt een stilte. Dan verandert er iets.</p>
 <div class="layout"><div class="preview"><canvas id="canvas" width="1080" height="1920" aria-label="Verticale video voorvertoning"></canvas><div class="meta"><span>VERTICAAL · 1080 × 1920</span><span id="duration">— sec</span></div><p class="hint">De cursor volgt de tekst, ook tijdens het wissen.</p></div>
-<section class="panel"><label for="first">01 / Eerste gedachte</label><textarea id="first">ik weet niet wat ik wil.</textarea><label for="second">02 / Herschreven gedachte</label><textarea id="second">ik weet nog niet wat ik wil.</textarea><p class="hint">Alleen het veranderde deel wordt gewist en opnieuw getypt.</p>
+<section class="panel"><label for="first">01 / Eerste gedachte</label><textarea id="first">ik weet niet wat ik wil.</textarea><label for="second">02 / Herschreven gedachte</label><textarea id="second">ik weet nog niet wat ik wil.</textarea><p class="hint">Alleen het veranderde deel wordt gewist en opnieuw getypt. De tekstgrootte en regelverdeling passen zich automatisch aan.</p><p class="hint" id="layoutNote" role="status"></p>
 <div class="controls"><div><label for="speed">Typsnelheid</label><select id="speed"><option value="145">Langzaam</option><option value="105" selected>Rustig</option><option value="70">Vlot</option></select></div><div><label for="erase">Wissnelheid</label><select id="erase"><option value="120">Langzaam</option><option value="88" selected>Rustig</option><option value="58">Vlot</option></select></div><div><label for="pause">Denkpauze</label><select id="pause"><option value="1300">1,3 seconden</option><option value="2200" selected>2,2 seconden</option><option value="3000">3,0 seconden</option></select></div><div><label for="hold">Laatste zin in beeld</label><select id="hold"><option value="1800">1,8 seconden</option><option value="2600" selected>2,6 seconden</option><option value="3600">3,6 seconden</option></select></div><div><label for="font">Tekstgrootte</label><select id="font"><option value="64">Bescheiden</option><option value="76" selected>Normaal</option><option value="90">Groot</option></select></div></div>
 <label class="signature"><input type="checkbox" id="sign" checked> Kleine ‘onder de ruis.’-signatuur</label>
 <div class="actions"><button class="primary" id="play">▶ Bekijk animatie</button><button id="export">↓ Exporteer video</button></div>
@@ -18,16 +18,55 @@ const arr=s=>Array.from(s);
 function config(){const a=arr($('first').value),b=arr($('second').value);let p=0;while(p<a.length&&p<b.length&&a[p]===b[p])p++;return{a,b,p,type:+$('speed').value,erase:+$('erase').value,pause:+$('pause').value,hold:+$('hold').value,font:+$('font').value,sign:$('sign').checked}}
 function phases(c){let first=c.a.length*c.type,wait=first+c.pause,deleted=wait+(c.a.length-c.p)*c.erase,rewritten=deleted+(c.b.length-c.p)*c.type;return{first,wait,deleted,rewritten,total:rewritten+c.hold}}
 function textAt(t,c,q){if(t<q.first)return c.a.slice(0,Math.min(c.a.length,Math.floor(t/c.type))).join('');if(t<q.wait)return c.a.join('');if(t<q.deleted)return c.a.slice(0,Math.max(c.p,c.a.length-Math.floor((t-q.wait)/c.erase))).join('');if(t<q.rewritten)return c.b.slice(0,Math.min(c.b.length,c.p+Math.floor((t-q.deleted)/c.type))).join('');return c.b.join('')}
-function wrap(s,max){let lines=[''];for(const word of s.split(/(\s+)/)){let i=lines.length-1;if(ctx.measureText(lines[i]+word).width>max&&lines[i].trim()&&!/^\s+$/.test(word))lines.push(word.trimStart());else lines[i]+=word}return lines}
-function draw(t,c,q){const g=ctx.createRadialGradient(815,620,50,530,1000,1400);g.addColorStop(0,'#50311f');g.addColorStop(.52,'#2c1c13');g.addColorStop(1,'#150e0b');ctx.fillStyle=g;ctx.fillRect(0,0,1080,1920);
-ctx.fillStyle='#eee4d9';ctx.textBaseline='alphabetic';ctx.font='400 '+c.font+'px system-ui,-apple-system,sans-serif';
-const lines=wrap(textAt(t,c,q),780),lh=c.font*1.5,y0=840-(lines.length-1)*lh/2;
-lines.forEach((line,i)=>ctx.fillText(line,142,y0+i*lh));
-if(Math.floor(t/500)%2===0){let line=lines[lines.length-1],x=148+ctx.measureText(line).width,y=y0+(lines.length-1)*lh;ctx.fillRect(x,y-c.font*.83,3,c.font*1.05)}
-if(c.sign){ctx.font='400 26px system-ui';ctx.fillStyle='#b99d87';ctx.fillText('onder de ruis.',142,1790)}
+function layoutText(source,font){
+ ctx.font='400 '+font+'px system-ui,-apple-system,sans-serif';
+ const matches=[...source.matchAll(/\\S+/g)].map(m=>({word:m[0],start:m.index,end:m.index+m[0].length}));
+ if(!matches.length)return[{start:0,end:0,text:''}];
+ const n=matches.length,dp=Array(n+1).fill(Infinity),next=Array(n).fill(n);dp[n]=0;
+ for(let i=n-1;i>=0;i--){
+  for(let j=i;j<n;j++){
+   const line=source.slice(matches[i].start,matches[j].end),width=ctx.measureText(line).width;
+   if(width>790)break;
+   const leftover=790-width;
+   const orphan=(j===n-1&&i===j&&i>0)?180000:0;
+   const cost=(j===n-1?0:leftover*leftover)+orphan+dp[j+1];
+   if(cost<dp[i]){dp[i]=cost;next[i]=j+1}
+  }
+ }
+ if(!Number.isFinite(dp[0]))return null;
+ const lines=[];let i=0;
+ while(i<n){const j=next[i]-1;if(j<i)return null;lines.push({start:matches[i].start,end:matches[j].end,text:source.slice(matches[i].start,matches[j].end)});i=j+1}
+ return lines;
 }
-function refresh(){if(busy)return;const c=config(),q=phases(c);$('duration').textContent=(q.total/1000).toFixed(1).replace('.',',')+' sec';draw(q.total,c,q)}
-async function run(exporting){if(busy)return;busy=true;$('play').disabled=true;$('export').disabled=true;const c=config(),q=phases(c);let recorder,stream,chunks=[];try{
+function prepare(c){
+ const a=c.a.join(''),b=c.b.join('');
+ for(let font=c.font;font>=44;font-=2){
+  const la=layoutText(a,font),lb=layoutText(b,font);
+  if(la&&lb&&la.length<=5&&lb.length<=5)return{font,la,lb,rows:Math.max(la.length,lb.length),fits:true};
+ }
+ return{font:44,la:layoutText(a,44)||[],lb:layoutText(b,44)||[],rows:5,fits:false};
+}
+function draw(t,c,q){
+ const g=ctx.createRadialGradient(815,620,50,530,1000,1400);
+ g.addColorStop(0,'#50311f');g.addColorStop(.52,'#2c1c13');g.addColorStop(1,'#150e0b');
+ ctx.fillStyle=g;ctx.fillRect(0,0,1080,1920);
+ const plan=c.plan,fs=plan.font,lh=fs*1.5;
+ ctx.fillStyle='#eee4d9';ctx.textBaseline='alphabetic';ctx.font='400 '+fs+'px system-ui,-apple-system,sans-serif';
+ const isFirst=t<q.deleted,lines=isFirst?plan.la:plan.lb;
+ const visible=textAt(t,c,q).length;
+ const y0=840-(plan.rows-1)*lh/2;
+ let cursorX=142,cursorY=y0;
+ lines.forEach((line,i)=>{
+  const count=Math.max(0,Math.min(visible,line.end)-line.start);
+  const shown=line.text.slice(0,count),y=y0+i*lh;
+  if(shown){ctx.fillText(shown,142,y);cursorX=148+ctx.measureText(shown).width;cursorY=y}
+  else if(visible>=line.start){cursorX=142;cursorY=y}
+ });
+ if(Math.floor(t/500)%2===0)ctx.fillRect(cursorX,cursorY-fs*.83,3,fs*1.05);
+ if(c.sign){ctx.font='400 26px system-ui';ctx.fillStyle='#b99d87';ctx.fillText('onder de ruis.',142,1790)}
+}
+function refresh(){if(busy)return;const c=config(),q=phases(c);c.plan=prepare(c);$('duration').textContent=(q.total/1000).toFixed(1).replace('.',',')+' sec';draw(q.total,c,q);$('layoutNote').textContent=c.plan.fits?'Automatische tekstindeling actief · '+c.plan.font+' px':'Deze gedachte is te lang voor vijf leesbare regels. Verkort de tekst.'}
+async function run(exporting){if(busy)return;busy=true;$('play').disabled=true;$('export').disabled=true;const c=config(),q=phases(c);c.plan=prepare(c);if(!c.plan.fits){$('status').textContent='De gedachte is te lang. Verkort de tekst voor een leesbare video.';return}let recorder,stream,chunks=[];try{
 if(exporting){if(!cv.captureStream||!window.MediaRecorder)throw Error('Deze browser ondersteunt geen directe video-export. Probeer Chrome of Edge op een computer.');const types=['video/mp4;codecs=avc1.42E01E','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];const mime=types.find(x=>MediaRecorder.isTypeSupported(x));if(!mime)throw Error('Geen ondersteund videoformaat gevonden.');stream=cv.captureStream(30);recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6500000});recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};draw(0,c,q);recorder.start(250)}
 $('status').textContent=exporting?'Video wordt gemaakt. Laat dit tabblad open…':'Animatie speelt af…';
 await new Promise(resolve=>{let start=performance.now();function frame(now){let t=Math.min(now-start,q.total);draw(t,c,q);if(t<q.total)requestAnimationFrame(frame);else resolve()}requestAnimationFrame(frame)});
