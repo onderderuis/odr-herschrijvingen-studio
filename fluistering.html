@@ -20,7 +20,7 @@
 <label class="check"><input id="signature" type="checkbox" checked> Kleine ‘onder de ruis.’-signatuur</label>
 <div class="actions"><button id="play">▶ Bekijk en beluister</button><button class="primary" id="export">↓ Exporteer video</button><button id="stop">Stop</button></div>
 <p class="hint" id="status" role="status">Upload een opname om de lijn op je stem te laten reageren.</p>
-<p class="hint">De lijn is bewust flinterdun: geen equalizer, geen dikke audiogolf en geen lichtgloed. Export gebruikt MP4/H.264 waar je browser dat met geluid ondersteunt; anders WebM.</p>
+<p class="hint">De ODR-lijn blijft flinterdun en wordt vlak wanneer de gedachte verschijnt. Op iPhone kan de browser de exportresolutie verlagen, ook als het canvas 1080 × 1920 is. Export gebruikt MP4/H.264 waar je browser dat met geluid ondersteunt; anders WebM.</p>
 </section></div></main>
 <script>
 (()=>{'use strict';
@@ -30,9 +30,9 @@ const W=1080,H=1920,TAU=Math.PI*2;
 const bg=()=>{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#241811');g.addColorStop(.65,'#2d1d16');g.addColorStop(1,'#211711');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)};
 function amp(t){if(!envelope||t<0)return 0;const index=Math.floor(t*100);return envelope[Math.min(envelope.length-1,index)]||0}
 function render(t=0,duration=0){
- bg();const midY=H*.49,cx=W/2,width=W*.36;
+ bg();const midY=H*.49,cx=W/2,width=W*.45;
  const intensity=({quiet:9,soft:17,alive:28}[$('movement').value]||17);
- const energy=amp(t),active=Math.min(1,Math.pow(energy, .68)*2.8);
+ const energy=amp(t),revealed=$('showThought').checked&&audioBuffer&&t>=audioBuffer.duration+.25,active=revealed?0:Math.min(1,Math.pow(energy, .68)*2.8);
  ctx.beginPath();ctx.lineWidth=1.6;ctx.strokeStyle='#e8d9cb';ctx.lineCap='round';ctx.lineJoin='round';
  for(let i=0;i<=280;i++){
   const u=i/280,edge=Math.pow(Math.sin(Math.PI*u),1.4);
@@ -42,9 +42,9 @@ function render(t=0,duration=0){
  }ctx.stroke();
  if($('signature').checked){ctx.fillStyle='#d5bca8';ctx.textAlign='left';ctx.font='400 22px "DM Sans",sans-serif';ctx.fillText('onder de ruis.',112,H-145)}
  if($('showThought').checked&&audioBuffer&&t>=audioBuffer.duration+.25){
-  const text=$('thought').value.trim(),max=820;let font=44,lines=[];
+  const text=$('thought').value.trim(),max=820;let font=40,lines=[];
   ctx.textAlign='center';ctx.fillStyle='#f0e1d4';
-  for(;font>=28;font-=2){ctx.font='400 '+font+'px "DM Sans",sans-serif';lines=[];let line='';for(const word of text.split(/\s+/)){const test=line?line+' '+word:word;if(ctx.measureText(test).width>max&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);if(lines.length<=4)break}
+  for(;font>=28;font-=2){ctx.font='400 '+font+'px "DM Sans",sans-serif';lines=[];let line='';for(const word of text.split(/\s+/)){const test=line?line+' '+word:word;if(ctx.measureText(test).width>max&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);if(lines.length>1&&lines[lines.length-1].split(' ').length===1){const previous=lines[lines.length-2].split(' ');if(previous.length>1){lines[lines.length-1]=previous.pop()+' '+lines[lines.length-1];lines[lines.length-2]=previous.join(' ')}}if(lines.length<=4&&!(lines.length>1&&lines[lines.length-1].split(' ').length===1))break}
   const first=H*.62-lines.length*font*.7;lines.forEach((line,i)=>ctx.fillText(line,cx,first+i*font*1.5));
  }
  $('clock').textContent='00:'+String(Math.floor(t)).padStart(2,'0');
@@ -64,13 +64,13 @@ async function start(exporting){
  let chunks=[],mime='',ext='webm';
  if(exporting){
   if(!cv.captureStream||!window.MediaRecorder)throw Error('Deze browser ondersteunt geen video-opname van het canvas.');
-  stream=cv.captureStream(30);destination.stream.getAudioTracks().forEach(track=>stream.addTrack(track));
+  stream=cv.captureStream(30);const videoTrack=stream.getVideoTracks()[0];if(videoTrack?.applyConstraints){try{await videoTrack.applyConstraints({width:{ideal:1080},height:{ideal:1920},frameRate:{ideal:30}})}catch(e){/* Browser may downscale canvas capture */}}destination.stream.getAudioTracks().forEach(track=>stream.addTrack(track));
   const types=['video/mp4;codecs="avc1.42E01E,mp4a.40.2"','video/mp4;codecs="avc1,mp4a.40.2"','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
   mime=types.find(t=>MediaRecorder.isTypeSupported(t))||'';
   if(!mime)throw Error('Geen geschikt exportformaat gevonden.');
   recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5500000});
   recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
-  recorder.onstop=()=>{if(!chunks.length){$('status').textContent='De opname bevat geen video.';return}const actual=recorder.mimeType||mime;ext=actual.includes('mp4')?'mp4':'webm';const blob=new Blob(chunks,{type:actual}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ODR-De-Fluistering.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);$('status').textContent=ext==='mp4'?'Video met geluid geëxporteerd als MP4. Controleer de codec bij de eerste export.':'Video met geluid geëxporteerd als WebM. Voor Instagram is omzetting naar H.264-MP4 nodig.'};
+  recorder.onstop=()=>{if(!chunks.length){$('status').textContent='De opname bevat geen video.';return}const actual=recorder.mimeType||mime;ext=actual.includes('mp4')?'mp4':'webm';const blob=new Blob(chunks,{type:actual}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ODR-De-Fluistering.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);$('status').textContent=ext==='mp4'?'MP4 met geluid geëxporteerd. De browser kan de resolutie beperken; controleer de video-eigenschappen.':'WebM met geluid geëxporteerd. Voor Instagram omzetten naar H.264-MP4.'};
   recorder.start(250);
  }
  const startAt=audioCtx.currentTime+.12;source.start(startAt);
