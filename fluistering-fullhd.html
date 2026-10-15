@@ -117,7 +117,7 @@ async function fullHD(){
  const button=$('hqExport');button.disabled=true;$('export').disabled=true;$('play').disabled=true;running=true;
  try{
   if(!window.VideoEncoder||!window.AudioEncoder)throw Error('WebCodecs wordt op dit apparaat niet ondersteund.');
-  const mod=await import('./vendor/mediabunny.js');
+  let mod;try{mod=await import('https://cdn.jsdelivr.net/npm/mediabunny@1.31.2/dist/mediabunny.js')}catch(e){throw Error('De Full HD-videomodule kon niet worden geladen. Probeer deze test in Safari zelf of gebruik de standaardexport.')}
   const {Output,Mp4OutputFormat,BufferTarget,CanvasSource,AudioBufferSource}=mod;
   const videoSupport=await VideoEncoder.isConfigSupported({codec:'avc1.640028',width:1080,height:1920,bitrate:6000000,framerate:30});
   if(!videoSupport.supported)throw Error('De iPhone ondersteunt geen Full HD H.264-encoder.');
