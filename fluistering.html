@@ -25,7 +25,7 @@
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d');
-let audioBuffer=null,envelope=null,audioCtx=null,source=null,silenceSource=null,recorder=null,stream=null,raf=0,running=false;
+let audioBuffer=null,envelope=null,audioCtx=null,source=null,recorder=null,stream=null,raf=0,running=false;
 const W=1080,H=1920,TAU=Math.PI*2;
 const bg=()=>{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#241811');g.addColorStop(.65,'#2d1d16');g.addColorStop(1,'#211711');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)};
 function amp(t){if(!envelope||t<0)return 0;const index=Math.floor(t*100);return envelope[Math.min(envelope.length-1,index)]||0}
@@ -50,17 +50,26 @@ function render(t=0,duration=0){
  $('clock').textContent='00:'+String(Math.floor(t)).padStart(2,'0');
 }
 async function decode(file){const data=await file.arrayBuffer();const temp=new (window.AudioContext||window.webkitAudioContext)();try{const buffer=await temp.decodeAudioData(data);if(!buffer.duration||!Number.isFinite(buffer.duration))throw Error('Ongeldige audiolengte');const hop=Math.max(1,Math.floor(buffer.sampleRate/100)),n=Math.ceil(buffer.length/hop),env=new Float32Array(n);for(let k=0;k<n;k++){let sum=0,count=0;const start=k*hop,end=Math.min(buffer.length,start+hop);for(let i=start;i<end;i+=4){let value=0;for(let ch=0;ch<buffer.numberOfChannels;ch++)value+=Math.abs(buffer.getChannelData(ch)[i])/buffer.numberOfChannels;sum+=value;count++}env[k]=count?sum/count:0}const sorted=Array.from(env).sort((a,b)=>a-b),p=sorted[Math.floor(sorted.length*.95)]||.01;for(let i=0;i<env.length;i++)env[i]=Math.min(1,env[i]/Math.max(.008,p));let smooth=0;for(let i=0;i<env.length;i++){smooth=smooth*.83+env[i]*.17;env[i]=smooth}return {buffer,env}}finally{await temp.close()}}
-function stop(){running=false;cancelAnimationFrame(raf);if(source){try{source.stop()}catch(e){}source.disconnect();source=null}if(silenceSource){try{silenceSource.stop()}catch(e){}silenceSource.disconnect();silenceSource=null}if(recorder&&recorder.state==='recording')recorder.stop();if(audioCtx){audioCtx.close().catch(()=>{});audioCtx=null}if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('play').disabled=false;$('export').disabled=false}
+function stop(){running=false;cancelAnimationFrame(raf);if(source){try{source.stop()}catch(e){}source.disconnect();source=null}if(recorder&&recorder.state==='recording')recorder.stop();if(audioCtx){audioCtx.close().catch(()=>{});audioCtx=null}if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('play').disabled=false;$('export').disabled=false}
 $('audio').addEventListener('change',async e=>{stop();audioBuffer=null;envelope=null;const file=e.target.files?.[0];if(!file)return;$('status').textContent='Opname wordt geanalyseerd…';try{const r=await decode(file);audioBuffer=r.buffer;envelope=r.env;$('status').textContent='Opname geladen: '+audioBuffer.duration.toFixed(1)+' seconden. Klaar voor voorvertoning.';render()}catch(err){$('status').textContent='Kon deze audio niet openen. Probeer WAV of MP3. ('+err.message+')'}});
 async function start(exporting){
  if(!audioBuffer){$('status').textContent='Upload eerst een opname.';return}
  if(running)stop();running=true;$('play').disabled=true;$('export').disabled=true;
  try{
  audioCtx=new (window.AudioContext||window.webkitAudioContext)();await audioCtx.resume();
- source=audioCtx.createBufferSource();source.buffer=audioBuffer;
+ source=audioCtx.createBufferSource();
  const destination=audioCtx.createMediaStreamDestination();source.connect(destination);
  if(!exporting)source.connect(audioCtx.destination);
  const tail=Number($('tail').value),total=audioBuffer.duration+tail+0.5;
+ // Keep the original audio source active until the closing text is finished.
+ const sr=audioBuffer.sampleRate,frames=Math.ceil(total*sr);
+ const padded=audioCtx.createBuffer(audioBuffer.numberOfChannels,frames,sr);
+ for(let ch=0;ch<audioBuffer.numberOfChannels;ch++){
+  const target=padded.getChannelData(ch);
+  target.set(audioBuffer.getChannelData(ch));
+  for(let j=audioBuffer.length;j<frames;j++)target[j]=0.0000002*Math.sin(2*Math.PI*180*(j-audioBuffer.length)/sr);
+ }
+ source.buffer=padded;
  let chunks=[],mime='',ext='webm';
  if(exporting){
   if(!cv.captureStream||!window.MediaRecorder)throw Error('Deze browser ondersteunt geen video-opname van het canvas.');
@@ -76,12 +85,8 @@ async function start(exporting){
  const startAt=audioCtx.currentTime+.12;
  // Keep an active audio source connected throughout the closing silence.
  // On iOS Safari, a MediaRecorder can truncate the recording as soon as the spoken buffer ends.
- silenceSource=audioCtx.createOscillator();
- const silentGain=audioCtx.createGain();silentGain.gain.value=0.000001;
- silenceSource.connect(silentGain);silentGain.connect(destination);
- silenceSource.start(startAt);silenceSource.stop(startAt+total+.2);
  source.start(startAt);
- const tick=()=>{if(!running)return;const t=Math.max(0,audioCtx.currentTime-startAt);render(t,total);if(t<total){raf=requestAnimationFrame(tick)}else{running=false;if(exporting&&recorder?.state==='recording')recorder.stop();if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}source?.disconnect();source=null;silenceSource?.disconnect();silenceSource=null;audioCtx?.close().catch(()=>{});audioCtx=null;$('play').disabled=false;$('export').disabled=false;if(!exporting)$('status').textContent='Voorvertoning afgerond.'}};
+ const tick=()=>{if(!running)return;const t=Math.max(0,audioCtx.currentTime-startAt);render(t,total);if(t<total){raf=requestAnimationFrame(tick)}else{running=false;if(exporting&&recorder?.state==='recording')recorder.stop();if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}source?.disconnect();source=null;audioCtx?.close().catch(()=>{});audioCtx=null;$('play').disabled=false;$('export').disabled=false;if(!exporting)$('status').textContent='Voorvertoning afgerond.'}};
  raf=requestAnimationFrame(tick);$('status').textContent=exporting?'Video en geluid worden opgenomen…':'Voorvertoning speelt af…';
  }catch(e){stop();$('status').textContent='Kan niet starten: '+e.message}
 }
