@@ -119,8 +119,12 @@ async function fullHD(){
   if(!window.VideoEncoder||!window.AudioEncoder)throw Error('WebCodecs wordt op dit apparaat niet ondersteund.');
   let mod;try{mod=await import('./vendor/mediabunny.js')}catch(e){throw Error('De lokale Full HD-videomodule is nog niet gepubliceerd of kon niet worden geladen.')}
   const {Output,Mp4OutputFormat,BufferTarget,CanvasSource,AudioBufferSource}=mod;
-  const videoSupport=await VideoEncoder.isConfigSupported({codec:'avc1.640028',width:1080,height:1920,bitrate:6000000,framerate:30});
-  if(!videoSupport.supported)throw Error('De iPhone ondersteunt geen Full HD H.264-encoder.');
+  // Diagnose the actual source size and encoder support before rendering.
+  const sourceSize=cv.width+' × '+cv.height;
+  const requested={codec:'avc1.640028',width:cv.width,height:cv.height,bitrate:6000000,framerate:30};
+  const videoSupport=await VideoEncoder.isConfigSupported(requested);
+  if(!videoSupport.supported)throw Error('H.264 Full HD niet ondersteund (canvas '+sourceSize+').');
+  $('status').textContent='Canvas: '+sourceSize+'. Encoder accepteert de Full HD-instellingen. Export wordt gemaakt…';
   const output=new Output({format:new Mp4OutputFormat(),target:new BufferTarget()});
   const video=new CanvasSource(cv,{codec:'avc',bitrate:6000000});
   const audio=new AudioBufferSource({codec:'aac',bitrate:160000});
@@ -140,8 +144,22 @@ async function fullHD(){
   }
   await output.finalize();
   const blob=new Blob([output.target.buffer],{type:'video/mp4'});
-  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ODR-De-Fluistering-FullHD.mp4';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
-  $('status').textContent='Full HD MP4 geëxporteerd. Controleer het bestand op je iPhone.';
+  const url=URL.createObjectURL(blob);
+  // Read the finished file's actual video dimensions; Safari may silently scale.
+  let encodedSize='onbekend',isHD=false;
+  try{
+   const probe=document.createElement('video');probe.preload='metadata';probe.muted=true;probe.playsInline=true;
+   const dims=await new Promise((resolve,reject)=>{
+    const timeout=setTimeout(()=>reject(Error('Metadata niet beschikbaar')),8000);
+    probe.onloadedmetadata=()=>{clearTimeout(timeout);resolve([probe.videoWidth,probe.videoHeight])};
+    probe.onerror=()=>{clearTimeout(timeout);reject(Error('Video kan niet worden uitgelezen'))};
+    probe.src=url;probe.load();
+   });
+   encodedSize=dims[0]+' × '+dims[1];isHD=dims[0]===1080&&dims[1]===1920;
+   probe.removeAttribute('src');probe.load();
+  }catch(e){encodedSize='niet automatisch te bepalen'}
+  const a=document.createElement('a');a.href=url;a.download=isHD?'ODR-De-Fluistering-FullHD.mp4':'ODR-De-Fluistering-Test.mp4';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  $('status').textContent=isHD?'✓ Full HD bevestigd: '+encodedSize+'. MP4 met geluid geëxporteerd.':'Export voltooid, maar Full HD niet bevestigd. Canvas: '+sourceSize+'. Video: '+encodedSize+'. De iPhone kan de encoderuitvoer verkleinen. Stuur deze gegevens door voor de volgende stap.';
  }catch(e){$('status').textContent='Full HD niet gelukt: '+e.message+' De standaardexport blijft beschikbaar.'}
  finally{running=false;button.disabled=false;$('export').disabled=false;$('play').disabled=false;render(0)}
 }
