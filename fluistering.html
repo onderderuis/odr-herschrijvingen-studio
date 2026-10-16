@@ -6,11 +6,11 @@
 <style>
 :root{font-family:"DM Sans",system-ui,sans-serif;color:#eee2d5;background:#18110e}*{box-sizing:border-box}body{margin:0}main{max-width:1160px;margin:auto;padding:34px 22px 70px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}.eyebrow{font-size:11px;letter-spacing:.25em;color:#c7a68d}.tabs{display:flex;flex-wrap:wrap;gap:7px}.tabs a{border:1px solid #614536;color:#e8d5c6;border-radius:9px;padding:10px 12px;font-size:12px;text-decoration:none}.tabs a.active{background:#e8d5c6;color:#271911}h1{font-size:clamp(32px,4vw,46px);font-weight:500;letter-spacing:-.045em;margin:20px 0 4px}p{line-height:1.55;color:#bea897}.layout{display:grid;grid-template-columns:minmax(260px,400px) minmax(320px,1fr);gap:30px;align-items:start;margin-top:24px}.preview{width:100%;max-width:400px;margin:auto}canvas{width:100%;height:auto;display:block;background:#271911;border:1px solid #634434}.meta{display:flex;justify-content:space-between;font-size:12px;color:#b9a28f;margin-top:10px}.panel{padding:26px;background:#261a14;border:1px solid #50382c;border-radius:17px}label{font-size:13px;display:block;margin:0 0 9px;color:#e6d0bf}input[type=file],textarea,select{font:inherit;color:#f0e2d6;background:#34251d;border:1px solid #775743;border-radius:9px;padding:12px;width:100%}input[type=file]{font-size:12px}textarea{resize:vertical;min-height:85px}select{font-size:14px}.group{margin-bottom:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.check{display:flex;gap:9px;align-items:center;font-size:13px;color:#e6d0bf;margin:15px 0}.check input{accent-color:#d6bca7}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}button{font:600 14px "DM Sans",sans-serif;padding:13px 16px;border-radius:9px;border:1px solid #987b66;background:transparent;color:#f1e4d8;cursor:pointer}button.primary{background:#e9d8c8;color:#271911;border-color:#e9d8c8}button:disabled{opacity:.45;cursor:wait}.hint{font-size:12px;color:#b69d8c}strong{color:#f1e4d8;font-weight:500}@media(max-width:760px){.layout{grid-template-columns:1fr}.preview{max-width:340px}.panel{padding:18px}}
 </style></head>
-<body><main><div class="top"><div class="eyebrow">ONDER DE RUIS / STUDIO</div><nav class="tabs"><a href="./">De Herschrijving</a><a href="doorhaling.html">De Doorhaling</a><a class="active" href="fluistering.html">De Fluistering</a><a href="fluistering-fullhd.html">Full HD-test</a></nav></div>
-<h1>De Fluistering.</h1><p>Een stem. Een bijna onzichtbare beweging. Verder niets.</p>
+<body><main><div class="top"><div class="eyebrow">ONDER DE RUIS / STUDIO</div><nav class="tabs"><a href="./">De Herschrijving</a><a href="doorhaling.html">De Doorhaling</a><a class="active" href="fluistering.html">De Fluistering</a></nav></div>
+<h1>De Fluistering.</h1><p>Een stem die beweging achterlaat. Wanneer de stem stilvalt, verschijnt de gedachte.</p>
 <div class="layout"><div class="preview"><canvas id="cv" width="1080" height="1920" aria-label="De dunne ODR-lijn beweegt op de stem"></canvas><div class="meta"><span>REEL · 1080 × 1920</span><span id="clock">00:00</span></div></div>
 <section class="panel">
-<div class="group"><label for="audio">01 / Upload je stemopname</label><input id="audio" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg"><p class="hint">WAV of MP3 aanbevolen. Het bestand blijft in je browser.</p></div>
+<div class="group"><label for="audio">01 / Upload je stemopname</label><input id="audio" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg"><p class="hint">M4A, WAV en MP3 worden ondersteund. Je opname blijft op dit apparaat.</p></div>
 <div class="group"><label for="thought">02 / Gedachte (optioneel zichtbaar aan het einde)</label><textarea id="thought">je hoeft niet altijd op de voorgrond te staan.</textarea></div>
 <div class="grid">
 <div><label for="movement">Beweging</label><select id="movement"><option value="quiet">Heel subtiel</option><option value="soft" selected>Subtiel</option><option value="alive">Iets levendiger</option></select></div>
@@ -18,15 +18,97 @@
 </div>
 <label class="check"><input id="showThought" type="checkbox" checked> Toon de gedachte na de stem (standaard aan; ook in de export)</label>
 <label class="check"><input id="signature" type="checkbox" checked> Kleine ‘onder de ruis.’-signatuur</label>
-<div class="actions"><button id="play">▶ Bekijk en beluister</button><button class="primary" id="export">↓ Exporteer video met geluid</button><button id="stop">Stop</button></div>
+<div class="actions"><button id="play">▶ Bekijk en beluister</button><button class="primary" id="hqExport">↓ Maak Full HD-video</button><button id="saveHD" style="display:none;background:#d4b79e;color:#271911">Bewaar video op iPhone</button><button id="stop">Stop</button></div>
 <p class="hint" id="status" role="status">Upload een opname om de lijn op je stem te laten reageren.</p>
-<p class="hint">De ODR-lijn blijft flinterdun en wordt vlak wanneer de gedachte verschijnt. De export houdt de audiostream ook tijdens de afsluitende stilte actief. Op iPhone kan de browser de exportresolutie verlagen, ook als het canvas 1080 × 1920 is. De standaardexport is de werkende iPhone-methode. De browser kan de resolutie verlagen; een gegarandeerde 1080p-export vraagt een andere encoder.</p>
+<p class="hint">De video wordt gemaakt in 1080 × 1920 pixels, met geluid. Kies na het exporteren <strong>Bewaar video op iPhone</strong> en daarna <strong>Bewaar in Bestanden</strong>. Je ontvangt een ZIP-bestand zodat de iPhone de videokwaliteit niet verlaagt. Tik in Bestanden op de ZIP om de originele MP4 uit te pakken.</p>
 </section></div></main>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d');
-let previewAudio=null,previewUrl=null,audioBuffer=null,envelope=null,audioCtx=null,source=null,recorder=null,stream=null,raf=0,running=false;
+let previewAudio=null,previewUrl=null,audioBuffer=null,envelope=null,audioCtx=null,source=null,recorder=null,stream=null,raf=0,running=false,latestHdBlob=null,latestHdName='ODR-De-Fluistering-FullHD.mp4',latestHdUrl=null;
 const W=1080,H=1920,TAU=Math.PI*2;
+const diagnosticKey='odr-fluistering-fullhd-last-result-v1';
+
+function openVideoStore(){
+ return new Promise((resolve,reject)=>{
+  const req=indexedDB.open('odr-fluistering-video',1);
+  req.onupgradeneeded=()=>req.result.createObjectStore('files');
+  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+ });
+}
+async function rememberVideo(blob,name){
+ const db=await openVideoStore();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction('files','readwrite');tx.objectStore('files').put({blob,name},'lastFullHD');
+  tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)};
+ });
+}
+async function restoreVideo(){
+ try{
+  const db=await openVideoStore();
+  const entry=await new Promise((resolve,reject)=>{
+   const tx=db.transaction('files','readonly'),req=tx.objectStore('files').get('lastFullHD');
+   req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+  });db.close();if(entry?.blob)presentVideo(entry.blob,entry.name);
+ }catch(e){}
+}
+function presentVideo(blob,name){
+ latestHdBlob=blob;latestHdName=name;
+ if(latestHdUrl)URL.revokeObjectURL(latestHdUrl);
+ latestHdUrl=URL.createObjectURL(blob);
+ $('saveHD').style.display='inline-block';
+ 
+}
+// ZIP uses the STORE method: the MP4 bytes remain unchanged, preventing
+// iOS share-sheet video transcoding. One file, one central-directory entry.
+function crc32(bytes){
+ let c=0xffffffff;
+ for(let i=0;i<bytes.length;i++){c^=bytes[i];for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xedb88320:0)}
+ return (c^0xffffffff)>>>0;
+}
+async function originalZip(blob,name){
+ const data=new Uint8Array(await blob.arrayBuffer());
+ const filename=new TextEncoder().encode(name);
+ const crc=crc32(data),n=data.length;
+ const local=new Uint8Array(30+filename.length);
+ let v=new DataView(local.buffer);
+ v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);
+ v.setUint16(8,0,true);v.setUint32(14,crc,true);
+ v.setUint32(18,n,true);v.setUint32(22,n,true);
+ v.setUint16(26,filename.length,true);local.set(filename,30);
+ const central=new Uint8Array(46+filename.length);v=new DataView(central.buffer);
+ v.setUint32(0,0x02014b50,true);v.setUint16(4,20,true);v.setUint16(6,20,true);
+ v.setUint32(16,crc,true);v.setUint32(20,n,true);v.setUint32(24,n,true);
+ v.setUint16(28,filename.length,true);central.set(filename,46);
+ const end=new Uint8Array(22);v=new DataView(end.buffer);
+ v.setUint32(0,0x06054b50,true);v.setUint16(8,1,true);v.setUint16(10,1,true);
+ v.setUint32(12,central.length,true);v.setUint32(16,local.length+n,true);
+ return new Blob([local,data,central,end],{type:'application/zip'});
+}
+$('saveHD').onclick=async()=>{
+ if(!latestHdBlob)return;
+ try{
+  const zip=await originalZip(latestHdBlob,latestHdName);
+  const zipName='ODR-De-Fluistering-Origineel.zip';
+  const file=new File([zip],zipName,{type:'application/zip'});
+  if(navigator.canShare?.({files:[file]})&&navigator.share){
+   await navigator.share({files:[file],title:'De Fluistering — originele videokwaliteit'});
+   saveDiagnostic('Kies ‘Bewaar in Bestanden’. Tik daarna in de app Bestanden op de ZIP om je Full HD-MP4 uit te pakken.');
+  }else{
+   const url=URL.createObjectURL(zip),a=document.createElement('a');a.href=url;a.download=zipName;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+   saveDiagnostic('ZIP-download gestart. Tik in Bestanden op de ZIP om je Full HD-MP4 uit te pakken.');
+  }
+ }catch(e){if(e.name!=='AbortError')saveDiagnostic('Opslaan als ZIP mislukt: '+e.message)}
+};
+
+function saveDiagnostic(message){
+ try{localStorage.setItem(diagnosticKey,JSON.stringify({message,date:new Date().toLocaleString('nl-NL')}))}catch(e){}
+ $('status').textContent=message;
+}
+function restoreDiagnostic(){
+ try{const last=JSON.parse(localStorage.getItem(diagnosticKey)||'null');if(last?.message)$('status').textContent='Laatste export ('+last.date+'): '+last.message}catch(e){}
+}
+
 const bg=()=>{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#241811');g.addColorStop(.65,'#2d1d16');g.addColorStop(1,'#211711');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)};
 function amp(t){if(!envelope||t<0)return 0;const index=Math.floor(t*100);return envelope[Math.min(envelope.length-1,index)]||0}
 function render(t=0,duration=0){
@@ -111,7 +193,66 @@ async function start(exporting){
  raf=requestAnimationFrame(tick);$('status').textContent=exporting?'Video en geluid worden opgenomen…':'Voorvertoning speelt af…';
  }catch(e){stop();$('status').textContent='Kan niet starten: '+e.message}
 }
-$('play').onclick=()=>start(false);$('export').onclick=()=>start(true);$('stop').onclick=()=>{stop();$('status').textContent='Gestopt.'};
+async function fullHD(){
+ if(!audioBuffer){$('status').textContent='Upload eerst een opname.';return}
+ if(running)return;
+ const button=$('hqExport');button.disabled=true;$('play').disabled=true;running=true;
+ try{
+  if(!window.VideoEncoder||!window.AudioEncoder)throw Error('WebCodecs wordt op dit apparaat niet ondersteund.');
+  let mod;try{mod=await import('./vendor/mediabunny.js')}catch(e){throw Error('De lokale Full HD-videomodule is nog niet gepubliceerd of kon niet worden geladen.')}
+  const {Output,Mp4OutputFormat,BufferTarget,CanvasSource,AudioBufferSource}=mod;
+  // Diagnose the actual source size and encoder support before rendering.
+  const sourceSize=cv.width+' × '+cv.height;
+  const requested={codec:'avc1.640028',width:cv.width,height:cv.height,bitrate:6000000,framerate:30};
+  const videoSupport=await VideoEncoder.isConfigSupported(requested);
+  if(!videoSupport.supported)throw Error('H.264 Full HD niet ondersteund (canvas '+sourceSize+').');
+  $('status').textContent='Canvas: '+sourceSize+'. Encoder accepteert de Full HD-instellingen. Export wordt gemaakt…';
+  const output=new Output({format:new Mp4OutputFormat(),target:new BufferTarget()});
+  const video=new CanvasSource(cv,{codec:'avc',bitrate:6000000});
+  const audio=new AudioBufferSource({codec:'aac',bitrate:160000});
+  output.addVideoTrack(video,{frameRate:30});
+  output.addAudioTrack(audio);
+  const tail=Number($('tail').value),total=audioBuffer.duration+tail+.5;
+  const sr=audioBuffer.sampleRate,frames=Math.ceil(total*sr);
+  const padded=new AudioBuffer({length:frames,numberOfChannels:audioBuffer.numberOfChannels,sampleRate:sr});
+  for(let ch=0;ch<audioBuffer.numberOfChannels;ch++)padded.getChannelData(ch).set(audioBuffer.getChannelData(ch));
+  await output.start();
+  await audio.add(padded);
+  const fps=30,n=Math.ceil(total*fps);
+  for(let i=0;i<n;i++){
+   const t=i/fps;render(t,total);
+   await video.add(t,1/fps);
+   if(i%10===0){$('status').textContent='Full HD renderen: '+Math.round(i/n*100)+'%';await new Promise(r=>setTimeout(r,0))}
+  }
+  await output.finalize();
+  const blob=new Blob([output.target.buffer],{type:'video/mp4'});
+  const url=URL.createObjectURL(blob);
+  // Read the finished file's actual video dimensions; Safari may silently scale.
+  let encodedSize='onbekend',isHD=false;
+  try{
+   const probe=document.createElement('video');probe.preload='metadata';probe.muted=true;probe.playsInline=true;
+   const dims=await new Promise((resolve,reject)=>{
+    const timeout=setTimeout(()=>reject(Error('Metadata niet beschikbaar')),8000);
+    probe.onloadedmetadata=()=>{clearTimeout(timeout);resolve([probe.videoWidth,probe.videoHeight])};
+    probe.onerror=()=>{clearTimeout(timeout);reject(Error('Video kan niet worden uitgelezen'))};
+    probe.src=url;probe.load();
+   });
+   encodedSize=dims[0]+' × '+dims[1];isHD=dims[0]===1080&&dims[1]===1920;
+   probe.removeAttribute('src');probe.load();
+  }catch(e){encodedSize='niet automatisch te bepalen'}
+  const report=isHD?'✓ Full HD bevestigd: '+encodedSize+'. MP4 met geluid geëxporteerd.':'Export voltooid, maar Full HD niet bevestigd. Canvas: '+sourceSize+'. Video: '+encodedSize+'. Stuur deze gegevens door voor de volgende stap.';
+  // Persist before opening the iPhone file viewer, which can unload this page.
+  saveDiagnostic(report);
+  const name=isHD?'ODR-De-Fluistering-FullHD.mp4':'ODR-De-Fluistering-Test.mp4';
+  presentVideo(blob,name);
+  try{await rememberVideo(blob,name);saveDiagnostic(report+' Klaar om op te slaan. Tik op ‘Bewaar video op iPhone’ en kies ‘Bewaar in Bestanden’.')}catch(e){saveDiagnostic(report+' Tik nu op ‘Bewaar video op iPhone’. Het bestand kon niet lokaal worden bewaard voor later.')}
+  URL.revokeObjectURL(url);
+ }catch(e){saveDiagnostic('Full HD niet gelukt: '+e.message+' De standaardexport blijft beschikbaar.')}
+ finally{running=false;button.disabled=false;$('play').disabled=false;render(0)}
+}
+$('hqExport').onclick=fullHD;
+$('play').onclick=()=>start(false);$('stop').onclick=()=>{stop();$('status').textContent='Gestopt.'};
+restoreDiagnostic();restoreVideo();
 ['movement','signature','showThought','thought'].forEach(id=>$(id).addEventListener('input',()=>{if(!running)render()}));render();document.fonts.ready.then(()=>{if(!running)render()});
 })();
 </script></body></html>
