@@ -14,13 +14,14 @@
 <div class="group"><label for="mode">02 / Wat wil je doen?</label><select id="mode"><option value="improve">Mijn stem verbeteren</option><option value="change">Mijn stem veranderen · experimenteel</option></select></div>
 <div class="group"><label for="profile">03 / Hoe wil je klinken?</label><select id="profile"><option value="natural">Natuurlijk · helder en schoon</option><option value="warm" selected>Warm · voller en zachter</option><option value="close">Dichtbij · intiem en direct</option><option value="calm">Rustig · zachtere pieken</option><option value="studio">Studio · gelijkmatig en verzorgd</option></select><p class="hint" id="description">Een subtiele warme klank, zonder je stem te veranderen.</p></div>
 <div class="group"><div class="intensity"><label for="intensity">04 / Intensiteit</label><span id="intensityLabel">Subtiel · 40%</span></div><input id="intensity" type="range" min="0" max="100" value="40" step="5"><p class="hint">Bij 0% blijft je opname volledig origineel.</p></div>
+<div class="group"><div class="intensity"><label for="rsoft">05 / Harde R verzachten</label><span id="rsoftLabel">30%</span></div><input id="rsoft" type="range" min="0" max="100" value="30" step="5"><p class="hint">Verzacht de scherpte rond medeklinkers. Dit is een subtiele klankfilter, geen herkenning van alleen de letter R. Bij een rollende of keel-R kan het effect beperkt zijn.</p></div>
 <div class="actions"><button id="process" class="primary" disabled>✦ Verbeter mijn stem</button></div>
 <div class="divider"></div>
-<label>05 / Luister en vergelijk</label><div class="actions"><button id="original" disabled>▶ Origineel</button><button id="enhanced" disabled>▶ Verbeterd</button><button id="stop" disabled>■ Stop</button></div>
+<label>06 / Luister en vergelijk</label><div class="actions"><button id="original" disabled>▶ Origineel</button><button id="enhanced" disabled>▶ Verbeterd</button><button id="stop" disabled>■ Stop</button></div>
 <div class="divider"></div>
-<label>06 / Bewaar je opname</label><div id="downloadArea"><button disabled>↓ Download WAV</button></div>
+<label>07 / Bewaar je opname</label><div id="downloadArea"><button disabled>↓ Download WAV</button></div>
 <p class="hint" id="status" role="status" aria-live="polite">Upload een opname om te beginnen.</p>
-<p class="hint">Bij Verbeteren gebruiken we toonregeling en dynamiekbewerking. Bij Veranderen houden we de toonhoogte bewust dicht bij je eigen stem en voegen we subtiele klankkleur toe. Dat kan bij sommige stemmen een hoorbaar digitaal effect geven. Dit is geen AI-stemconversie.</p>
+<p class="hint">Bij Verbeteren gebruiken we toonregeling en dynamiekbewerking. De R-regelaar tempert een deel van de scherpte, maar kan ook andere medeklinkers zachter maken. Bij Veranderen houden we de toonhoogte bewust dicht bij je eigen stem en voegen we subtiele klankkleur toe. Dat kan bij sommige stemmen een hoorbaar digitaal effect geven. Dit is geen AI-stemconversie.</p>
 </section></div></main>
 <script>
 (()=>{'use strict';
@@ -63,6 +64,7 @@ $('audio').onchange=async e=>{
  $('status').textContent='Opname wordt geladen…';
  try{const ac=new (window.AudioContext||window.webkitAudioContext)();try{inputBuffer=await ac.decodeAudioData(await file.arrayBuffer())}finally{await ac.close()}originalUrl=URL.createObjectURL(file);$('duration').textContent=time(inputBuffer.duration);$('waveLabel').textContent='ORIGINELE OPNAME';draw(inputBuffer);enable('original',true);enable('process',true);$('status').textContent='Opname geladen. Kies een profiel en tik op ‘Verbeter mijn stem’.'}catch(err){$('status').textContent='Kan deze opname niet openen: '+err.message}
 };
+$('rsoft').oninput=()=>{$('rsoftLabel').textContent=$('rsoft').value+'%';resetProcessed()};
 $('profile').onchange=()=>{$('description').textContent=descriptions[$('profile').value];resetProcessed()};
 $('intensity').oninput=()=>{$('intensityLabel').textContent=($('mode').value==='change'?'Effect':'Subtiel')+' · '+$('intensity').value+'%';resetProcessed()};
 function filter(ac,type,frequency,gain=0,q=0.707){const f=ac.createBiquadFilter();f.type=type;f.frequency.value=frequency;if(type==='peaking'||type==='lowshelf'||type==='highshelf')f.gain.value=gain;f.Q.value=q;return f}
@@ -92,7 +94,7 @@ function pitchBuffer(buffer,ratio){
 async function process(){
  if(!inputBuffer||busy)return;busy=true;enable('process',false);enable('original',false);enable('enhanced',false);$('status').textContent='Je stem wordt lokaal verbeterd…';
  try{
-  const change=$('mode').value==='change';const raw=inputBuffer,sr=raw.sampleRate,n=raw.length,channels=Math.min(raw.numberOfChannels,2),intensity=Number($('intensity').value)/100,profile=$('profile').value;
+  const rSoft=Number($('rsoft').value)/100;const change=$('mode').value==='change';const raw=inputBuffer,sr=raw.sampleRate,n=raw.length,channels=Math.min(raw.numberOfChannels,2),intensity=Number($('intensity').value)/100,profile=$('profile').value;
   const semitones=change?(profile==='soft'?1.2*intensity:profile==='deep'?-2.4*intensity:profile==='dark'?-1.1*intensity:-2.0*intensity):0;
   const ratio=Math.pow(2,semitones/12);
   const b=change?pitchBuffer(raw,ratio):raw;
@@ -110,6 +112,7 @@ async function process(){
   if(profile==='cinema')nodes.push(filter(offline,'lowshelf',180,6*intensity),filter(offline,'peaking',240,2*intensity,1),filter(offline,'peaking',2200,2*intensity,1),filter(offline,'highshelf',7000,-3*intensity));
   if(profile==='soft')nodes.push(filter(offline,'lowshelf',190,-1.5*intensity),filter(offline,'highshelf',4500,-2*intensity));
   if(profile==='studio')nodes.push(filter(offline,'peaking',260,-1.3*intensity,1),filter(offline,'peaking',3300,1.7*intensity,1),filter(offline,'highshelf',9000,.7*intensity));
+  if(rSoft>0){nodes.push(filter(offline,'peaking',2400,-5*rSoft,0.9),filter(offline,'peaking',4300,-2*rSoft,1.2))}
   for(const f of nodes){last.connect(f);last=f}
   const comp=offline.createDynamicsCompressor();comp.threshold.value=-16-intensity*(profile==='studio'?13:profile==='calm'?10:7);comp.knee.value=18;comp.ratio.value=1+intensity*(profile==='studio'?2.2:profile==='calm'?1.8:1.3);comp.attack.value=.008;comp.release.value=.22;last.connect(comp);comp.connect(offline.destination);
   src.start(0);const rendered=await offline.startRendering();
@@ -123,10 +126,10 @@ async function process(){
    let level=0;for(let c=0;c<channels;c++)level=Math.max(level,Math.abs(arrays[c][i]));
    envelope=Math.max(level,envelope*alpha);
    const gate=1-intensity*.35*(1-Math.min(1,envelope/gateFloor));
-   for(let c=0;c<channels;c++){const value=intensity===0?raw.getChannelData(c)[i]:arrays[c][i]*gate;outputs[c][i]=value;peak=Math.max(peak,Math.abs(value))}
+   for(let c=0;c<channels;c++){const value=intensity===0&&rSoft===0?raw.getChannelData(c)[i]:arrays[c][i]*gate;outputs[c][i]=value;peak=Math.max(peak,Math.abs(value))}
   }
   // Never boost more than 6 dB; cap peaks at -1 dBFS.
-  const gain=intensity===0?1:Math.min(1.995,peak>0?.891/peak:1);
+  const gain=intensity===0&&rSoft===0?1:Math.min(1.995,peak>0?.891/peak:1);
   if(gain!==1)for(let c=0;c<channels;c++)for(let i=0;i<n;i++)outputs[c][i]*=gain;
   outputBuffer=out;
   const blob=wav(out);enhancedUrl=URL.createObjectURL(blob);
