@@ -22,7 +22,7 @@ jobs:
           node-version: '22'
       - name: Install pinned browser encoder and bundler
         run: |
-          npm install --prefix /tmp/odr-fullhd --no-save --no-package-lock --ignore-scripts mediabunny@1.31.2 esbuild@0.25.12
+          npm install --prefix /tmp/odr-fullhd --no-save --no-package-lock --ignore-scripts mediabunny@1.61.5 esbuild@0.25.12
       - name: Build local browser module
         run: |
           mkdir -p vendor
