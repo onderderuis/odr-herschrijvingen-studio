@@ -27,6 +27,15 @@
 const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d');
 let previewAudio=null,previewUrl=null,audioBuffer=null,envelope=null,audioCtx=null,source=null,recorder=null,stream=null,raf=0,running=false;
 const W=1080,H=1920,TAU=Math.PI*2;
+const diagnosticKey='odr-fluistering-fullhd-last-result-v1';
+function saveDiagnostic(message){
+ try{localStorage.setItem(diagnosticKey,JSON.stringify({message,date:new Date().toLocaleString('nl-NL')}))}catch(e){}
+ $('status').textContent=message;
+}
+function restoreDiagnostic(){
+ try{const last=JSON.parse(localStorage.getItem(diagnosticKey)||'null');if(last?.message)$('status').textContent='Laatste export ('+last.date+'): '+last.message}catch(e){}
+}
+
 const bg=()=>{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#241811');g.addColorStop(.65,'#2d1d16');g.addColorStop(1,'#211711');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)};
 function amp(t){if(!envelope||t<0)return 0;const index=Math.floor(t*100);return envelope[Math.min(envelope.length-1,index)]||0}
 function render(t=0,duration=0){
@@ -158,13 +167,16 @@ async function fullHD(){
    encodedSize=dims[0]+' × '+dims[1];isHD=dims[0]===1080&&dims[1]===1920;
    probe.removeAttribute('src');probe.load();
   }catch(e){encodedSize='niet automatisch te bepalen'}
+  const report=isHD?'✓ Full HD bevestigd: '+encodedSize+'. MP4 met geluid geëxporteerd.':'Export voltooid, maar Full HD niet bevestigd. Canvas: '+sourceSize+'. Video: '+encodedSize+'. Stuur deze gegevens door voor de volgende stap.';
+  // Persist before opening the iPhone file viewer, which can unload this page.
+  saveDiagnostic(report);
   const a=document.createElement('a');a.href=url;a.download=isHD?'ODR-De-Fluistering-FullHD.mp4':'ODR-De-Fluistering-Test.mp4';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
-  $('status').textContent=isHD?'✓ Full HD bevestigd: '+encodedSize+'. MP4 met geluid geëxporteerd.':'Export voltooid, maar Full HD niet bevestigd. Canvas: '+sourceSize+'. Video: '+encodedSize+'. De iPhone kan de encoderuitvoer verkleinen. Stuur deze gegevens door voor de volgende stap.';
- }catch(e){$('status').textContent='Full HD niet gelukt: '+e.message+' De standaardexport blijft beschikbaar.'}
+ }catch(e){saveDiagnostic('Full HD niet gelukt: '+e.message+' De standaardexport blijft beschikbaar.')}
  finally{running=false;button.disabled=false;$('export').disabled=false;$('play').disabled=false;render(0)}
 }
 $('hqExport').onclick=fullHD;
 $('play').onclick=()=>start(false);$('export').onclick=()=>start(true);$('stop').onclick=()=>{stop();$('status').textContent='Gestopt.'};
+restoreDiagnostic();
 ['movement','signature','showThought','thought'].forEach(id=>$(id).addEventListener('input',()=>{if(!running)render()}));render();document.fonts.ready.then(()=>{if(!running)render()});
 })();
 </script></body></html>
