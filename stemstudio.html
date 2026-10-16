@@ -7,26 +7,35 @@
 :root{font-family:"DM Sans",system-ui,sans-serif;color:#eee2d5;background:#18110e}*{box-sizing:border-box}body{margin:0}main{max-width:1120px;margin:auto;padding:34px 22px 75px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}.eyebrow{font-size:11px;letter-spacing:.25em;color:#c7a68d}.tabs{display:flex;flex-wrap:wrap;gap:7px}.tabs a{border:1px solid #614536;color:#e8d5c6;border-radius:9px;padding:10px 12px;font-size:12px;text-decoration:none}.tabs a.active{background:#e8d5c6;color:#271911}h1{font-size:clamp(32px,4vw,46px);font-weight:500;letter-spacing:-.045em;margin:22px 0 4px}p{line-height:1.55;color:#bea897}.layout{display:grid;grid-template-columns:minmax(260px,410px) minmax(320px,1fr);gap:30px;align-items:start;margin-top:25px}.visual{padding:25px 22px;background:#271b15;border:1px solid #50382c;border-radius:17px}.visual canvas{width:100%;height:auto;aspect-ratio:2/1;display:block}.visual .sub{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.07em;color:#b69d8c;margin-top:14px}.panel{padding:26px;background:#261a14;border:1px solid #50382c;border-radius:17px}label{font-size:13px;display:block;margin:0 0 9px;color:#e6d0bf}input[type=file],select{font:inherit;color:#f0e2d6;background:#34251d;border:1px solid #775743;border-radius:9px;padding:12px;width:100%}input[type=file]{font-size:12px}.group{margin-bottom:23px}.hint{font-size:12px;color:#b69d8c}select{font-size:14px}.intensity{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.intensity span{font-size:12px;color:#cbb2a0}input[type=range]{width:100%;accent-color:#e2c7ae}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}button{font:600 14px "DM Sans",sans-serif;padding:13px 16px;border-radius:9px;border:1px solid #987b66;background:transparent;color:#f1e4d8;cursor:pointer}button.primary{background:#e9d8c8;color:#271911;border-color:#e9d8c8}button:disabled{opacity:.45;cursor:wait}.divider{border-top:1px solid #574033;margin:23px 0}.playing{background:#483328!important}.download{display:inline-block;padding:13px 16px;background:#e9d8c8;color:#271911;text-decoration:none;border-radius:9px;font-size:14px;font-weight:600}.tag{font-size:11px;letter-spacing:.16em;color:#c8aa94}#status{min-height:38px}strong{font-weight:500;color:#f1e4d8}@media(max-width:760px){.layout{grid-template-columns:1fr}.panel{padding:18px}main{padding:25px 16px 60px}}
 </style></head>
 <body><main><div class="top"><div class="eyebrow">ONDER DE RUIS / STUDIO</div><nav class="tabs"><a href="./">De Herschrijving</a><a href="doorhaling.html">De Doorhaling</a><a href="fluistering.html">De Fluistering</a><a class="active" href="stemstudio.html">De Stemstudio</a></nav></div>
-<h1>De Stemstudio.</h1><p>Je eigen stem. Alleen iets helderder, warmer of dichterbij.</p>
-<div class="layout"><div class="visual"><div class="tag">JE STEM BLIJFT JE STEM</div><canvas id="wave" width="720" height="360" aria-label="Golfvorm van je opname"></canvas><div class="sub"><span id="waveLabel">NOG GEEN OPNAME</span><span id="duration">00:00</span></div><p class="hint">Je opname wordt uitsluitend op dit apparaat verwerkt. Er wordt niets naar een server geüpload.</p></div>
+<h1>De Stemstudio.</h1><p>Je eigen stem verbeteren. Of experimenteren met een heel ander stemgeluid.</p>
+<div class="layout"><div class="visual"><div class="tag">JE STEM, JOUW GELUID</div><canvas id="wave" width="720" height="360" aria-label="Golfvorm van je opname"></canvas><div class="sub"><span id="waveLabel">NOG GEEN OPNAME</span><span id="duration">00:00</span></div><p class="hint">Je opname wordt uitsluitend op dit apparaat verwerkt. Er wordt niets naar een server geüpload.</p></div>
 <section class="panel">
 <div class="group"><label for="audio">01 / Upload je stemopname</label><input id="audio" type="file" accept="audio/*,.m4a,.wav,.mp3,.aac,.ogg"><p class="hint">M4A, WAV en MP3. Werkt ook met opnames van je iPhone.</p></div>
-<div class="group"><label for="profile">02 / Hoe wil je klinken?</label><select id="profile"><option value="natural">Natuurlijk · helder en schoon</option><option value="warm" selected>Warm · voller en zachter</option><option value="close">Dichtbij · intiem en direct</option><option value="calm">Rustig · zachtere pieken</option><option value="studio">Studio · gelijkmatig en verzorgd</option></select><p class="hint" id="description">Een subtiele warme klank, zonder je stem te veranderen.</p></div>
-<div class="group"><div class="intensity"><label for="intensity">03 / Intensiteit</label><span id="intensityLabel">Subtiel · 40%</span></div><input id="intensity" type="range" min="0" max="100" value="40" step="5"><p class="hint">Bij 0% blijft je opname volledig origineel.</p></div>
+<div class="group"><label for="mode">02 / Wat wil je doen?</label><select id="mode"><option value="improve">Mijn stem verbeteren</option><option value="change">Mijn stem veranderen · experimenteel</option></select></div>
+<div class="group"><label for="profile">03 / Hoe wil je klinken?</label><select id="profile"><option value="natural">Natuurlijk · helder en schoon</option><option value="warm" selected>Warm · voller en zachter</option><option value="close">Dichtbij · intiem en direct</option><option value="calm">Rustig · zachtere pieken</option><option value="studio">Studio · gelijkmatig en verzorgd</option></select><p class="hint" id="description">Een subtiele warme klank, zonder je stem te veranderen.</p></div>
+<div class="group"><div class="intensity"><label for="intensity">04 / Intensiteit</label><span id="intensityLabel">Subtiel · 40%</span></div><input id="intensity" type="range" min="0" max="100" value="40" step="5"><p class="hint">Bij 0% blijft je opname volledig origineel.</p></div>
 <div class="actions"><button id="process" class="primary" disabled>✦ Verbeter mijn stem</button></div>
 <div class="divider"></div>
-<label>04 / Luister en vergelijk</label><div class="actions"><button id="original" disabled>▶ Origineel</button><button id="enhanced" disabled>▶ Verbeterd</button><button id="stop" disabled>■ Stop</button></div>
+<label>05 / Luister en vergelijk</label><div class="actions"><button id="original" disabled>▶ Origineel</button><button id="enhanced" disabled>▶ Verbeterd</button><button id="stop" disabled>■ Stop</button></div>
 <div class="divider"></div>
-<label>05 / Bewaar je opname</label><div id="downloadArea"><button disabled>↓ Download WAV</button></div>
+<label>06 / Bewaar je opname</label><div id="downloadArea"><button disabled>↓ Download WAV</button></div>
 <p class="hint" id="status" role="status" aria-live="polite">Upload een opname om te beginnen.</p>
-<p class="hint">De profielen gebruiken zachte toonregeling, dynamiekbewerking en filtering. Achtergrondruis kan worden verminderd, maar niet volledig verwijderd. De tool vervangt geen professionele restauratie van beschadigde opnames.</p>
+<p class="hint">Bij Verbeteren gebruiken we toonregeling en dynamiekbewerking. Veranderen gebruikt experimentele toonhoogteverschuiving en filtering. Dat kan bij sommige stemmen een hoorbaar digitaal effect geven. Dit is geen AI-stemconversie.</p>
 </section></div></main>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
 const wave=$('wave'),ctx=wave.getContext('2d');
 let inputBuffer=null,outputBuffer=null,originalUrl=null,enhancedUrl=null,player=null,busy=false,filename='opname';
-const descriptions={natural:'Een helderdere stem met behoud van je eigen klank.',warm:'Een subtiele warme klank, zonder je stem te veranderen.',close:'Iets meer aanwezigheid, alsof je dichter bij de microfoon spreekt.',calm:'Zachtere volumeverschillen en minder scherpe klanken.',studio:'Een gelijkmatiger volume en een verzorgde, heldere klank.'};
+const descriptions={natural:'Een helderdere stem met behoud van je eigen klank.',warm:'Een subtiele warme klank, zonder je stem te veranderen.',close:'Iets meer aanwezigheid, alsof je dichter bij de microfoon spreekt.',calm:'Zachtere volumeverschillen en minder scherpe klanken.',studio:'Een gelijkmatiger volume en een verzorgde, heldere klank.',deep:'Een lagere stem met meer laag. Je spreekt in hetzelfde tempo.',dark:'Een diepe, donkere vertelstem met minder hoge frequenties.',cinema:'Een zware, filmische stem met extra diepte en aanwezigheid.',soft:'Een iets lichtere stem met een zachte klank.'};
+const improveOptions=[['natural','Natuurlijk · helder en schoon'],['warm','Warm · voller en zachter'],['close','Dichtbij · intiem en direct'],['calm','Rustig · zachtere pieken'],['studio','Studio · gelijkmatig en verzorgd']];
+const changeOptions=[['deep','Dieper · een lagere stem'],['dark','Donker · mysterieuze vertelstem'],['cinema','Filmisch · diep en krachtig'],['soft','Zachter · iets hoger en lichter']];
+function setMode(){const change=$('mode').value==='change',list=change?changeOptions:improveOptions;
+ $('profile').replaceChildren(...list.map(([value,label])=>{const o=document.createElement('option');o.value=value;o.textContent=label;return o}));
+ $('profile').value=change?'dark':'warm';$('description').textContent=descriptions[$('profile').value];$('process').textContent=change?'✦ Verander mijn stem':'✦ Verbeter mijn stem';
+ $('intensity').value=change?60:40;$('intensityLabel').textContent=(change?'Effect':'Subtiel')+' · '+$('intensity').value+'%';resetProcessed();
+}
+$('mode').onchange=setMode;
 function time(t){const n=Math.floor(t||0);return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0')}
 function draw(buffer){
  const W=wave.width,H=wave.height;ctx.clearRect(0,0,W,H);
@@ -55,12 +64,37 @@ $('audio').onchange=async e=>{
  try{const ac=new (window.AudioContext||window.webkitAudioContext)();try{inputBuffer=await ac.decodeAudioData(await file.arrayBuffer())}finally{await ac.close()}originalUrl=URL.createObjectURL(file);$('duration').textContent=time(inputBuffer.duration);$('waveLabel').textContent='ORIGINELE OPNAME';draw(inputBuffer);enable('original',true);enable('process',true);$('status').textContent='Opname geladen. Kies een profiel en tik op ‘Verbeter mijn stem’.'}catch(err){$('status').textContent='Kan deze opname niet openen: '+err.message}
 };
 $('profile').onchange=()=>{$('description').textContent=descriptions[$('profile').value];resetProcessed()};
-$('intensity').oninput=()=>{$('intensityLabel').textContent='Subtiel · '+$('intensity').value+'%';resetProcessed()};
+$('intensity').oninput=()=>{$('intensityLabel').textContent=($('mode').value==='change'?'Effect':'Subtiel')+' · '+$('intensity').value+'%';resetProcessed()};
 function filter(ac,type,frequency,gain=0,q=0.707){const f=ac.createBiquadFilter();f.type=type;f.frequency.value=frequency;if(type==='peaking'||type==='lowshelf'||type==='highshelf')f.gain.value=gain;f.Q.value=q;return f}
+// Granular overlap-add: pitch moves while keeping the original duration.
+// Experimental by design: some voices may reveal grain artifacts.
+function pitchBuffer(buffer,ratio){
+ const length=buffer.length,sr=buffer.sampleRate,ch=Math.min(2,buffer.numberOfChannels);
+ const result=new AudioBuffer({length,numberOfChannels:ch,sampleRate:sr});
+ if(Math.abs(ratio-1)<.0001){for(let c=0;c<ch;c++)result.copyToChannel(buffer.getChannelData(c),c);return result}
+ const grain=4096,hop=1024,weights=new Float32Array(length);
+ const src=Array.from({length:ch},(_,c)=>buffer.getChannelData(c));
+ const dst=Array.from({length:ch},(_,c)=>result.getChannelData(c));
+ for(let start=-grain;start<length;start+=hop){
+   for(let j=0;j<grain;j++){
+     const i=start+j;if(i<0||i>=length)continue;
+     const win=.5-.5*Math.cos(2*Math.PI*j/(grain-1));
+     // Center-align each grain, then read at the requested pitch ratio.
+     const p=start+grain/2+(j-grain/2)*ratio;
+     if(p<0||p>=length-1)continue;
+     const p0=Math.floor(p),t=p-p0;weights[i]+=win;
+     for(let c=0;c<ch;c++)dst[c][i]+=((1-t)*src[c][p0]+t*src[c][p0+1])*win;
+   }
+ }
+ for(let c=0;c<ch;c++)for(let i=0;i<length;i++)dst[c][i]/=weights[i]||1;
+ return result;
+}
 async function process(){
  if(!inputBuffer||busy)return;busy=true;enable('process',false);enable('original',false);enable('enhanced',false);$('status').textContent='Je stem wordt lokaal verbeterd…';
  try{
-  const b=inputBuffer,sr=b.sampleRate,n=b.length,channels=Math.min(b.numberOfChannels,2),intensity=Number($('intensity').value)/100,profile=$('profile').value;
+  const change=$('mode').value==='change';const raw=inputBuffer,sr=raw.sampleRate,n=raw.length,channels=Math.min(raw.numberOfChannels,2),intensity=Number($('intensity').value)/100,profile=$('profile').value;
+  const ratio=change?(profile==='soft'?1+.15*intensity:profile==='deep'?1-.24*intensity:profile==='dark'?1-.34*intensity:1-.40*intensity):1;
+  const b=change?pitchBuffer(raw,ratio):raw;
   const offline=new OfflineAudioContext(channels,n,sr),src=offline.createBufferSource(),work=offline.createBuffer(channels,n,sr);
   for(let c=0;c<channels;c++)work.copyToChannel(b.getChannelData(c),c);
   src.buffer=work;
@@ -70,6 +104,10 @@ async function process(){
   if(profile==='warm')nodes.push(filter(offline,'lowshelf',220,2.5*intensity),filter(offline,'peaking',380,-1.2*intensity,1.1),filter(offline,'highshelf',6500,-1.1*intensity));
   if(profile==='close')nodes.push(filter(offline,'peaking',180,1.5*intensity,1),filter(offline,'peaking',2300,2*intensity,1.1),filter(offline,'highshelf',7800,-.7*intensity));
   if(profile==='calm')nodes.push(filter(offline,'peaking',3700,-2.2*intensity,1),filter(offline,'highshelf',6500,-1.6*intensity));
+  if(profile==='deep')nodes.push(filter(offline,'lowshelf',210,3.5*intensity),filter(offline,'highshelf',5800,-2*intensity));
+  if(profile==='dark')nodes.push(filter(offline,'lowshelf',190,5*intensity),filter(offline,'peaking',260,2*intensity,1),filter(offline,'highshelf',3900,-5*intensity));
+  if(profile==='cinema')nodes.push(filter(offline,'lowshelf',180,6*intensity),filter(offline,'peaking',240,2*intensity,1),filter(offline,'peaking',2200,2*intensity,1),filter(offline,'highshelf',7000,-3*intensity));
+  if(profile==='soft')nodes.push(filter(offline,'lowshelf',190,-1.5*intensity),filter(offline,'highshelf',4500,-2*intensity));
   if(profile==='studio')nodes.push(filter(offline,'peaking',260,-1.3*intensity,1),filter(offline,'peaking',3300,1.7*intensity,1),filter(offline,'highshelf',9000,.7*intensity));
   for(const f of nodes){last.connect(f);last=f}
   const comp=offline.createDynamicsCompressor();comp.threshold.value=-16-intensity*(profile==='studio'?13:profile==='calm'?10:7);comp.knee.value=18;comp.ratio.value=1+intensity*(profile==='studio'?2.2:profile==='calm'?1.8:1.3);comp.attack.value=.008;comp.release.value=.22;last.connect(comp);comp.connect(offline.destination);
@@ -84,7 +122,7 @@ async function process(){
    let level=0;for(let c=0;c<channels;c++)level=Math.max(level,Math.abs(arrays[c][i]));
    envelope=Math.max(level,envelope*alpha);
    const gate=1-intensity*.35*(1-Math.min(1,envelope/gateFloor));
-   for(let c=0;c<channels;c++){const value=intensity===0?originals[c][i]:arrays[c][i]*gate;outputs[c][i]=value;peak=Math.max(peak,Math.abs(value))}
+   for(let c=0;c<channels;c++){const value=intensity===0?raw.getChannelData(c)[i]:arrays[c][i]*gate;outputs[c][i]=value;peak=Math.max(peak,Math.abs(value))}
   }
   // Never boost more than 6 dB; cap peaks at -1 dBFS.
   const gain=intensity===0?1:Math.min(1.995,peak>0?.891/peak:1);
@@ -107,6 +145,6 @@ function play(url,button){
 $('original').onclick=()=>play(originalUrl,'original');
 $('enhanced').onclick=()=>play(enhancedUrl,'enhanced');
 $('stop').onclick=()=>{if(player){player.pause();player.currentTime=0}enable('stop',false);$('original').classList.remove('playing');$('enhanced').classList.remove('playing')};
-draw(null);
+draw(null);setMode();
 })();
 </script></body></html>
