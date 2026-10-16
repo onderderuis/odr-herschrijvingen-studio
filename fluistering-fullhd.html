@@ -18,16 +18,61 @@
 </div>
 <label class="check"><input id="showThought" type="checkbox" checked> Toon de gedachte na de stem (standaard aan; ook in de export)</label>
 <label class="check"><input id="signature" type="checkbox" checked> Kleine ‘onder de ruis.’-signatuur</label>
-<div class="actions"><button id="play">▶ Bekijk en beluister</button><button class="primary" id="hqExport">↓ Maak 1080 × 1920 MP4</button><button id="export">Standaardexport</button><button id="stop">Stop</button></div>
+<div class="actions"><button id="play">▶ Bekijk en beluister</button><button class="primary" id="hqExport">↓ Maak 1080 × 1920 MP4</button><button id="export">Standaardexport</button><button id="saveHD" style="display:none;background:#d4b79e;color:#271911">Bewaar Full HD-video op iPhone</button><a id="downloadHD" style="display:none;padding:13px 16px;border:1px solid #987b66;border-radius:9px;color:#f1e4d8;text-decoration:none" download="ODR-De-Fluistering-FullHD.mp4">Open MP4-bestand</a><button id="stop">Stop</button></div>
 <p class="hint" id="status" role="status">Upload een opname om de lijn op je stem te laten reageren.</p>
-<p class="hint">De ODR-lijn blijft flinterdun en wordt vlak wanneer de gedachte verschijnt. De export houdt de audiostream ook tijdens de afsluitende stilte actief. Op iPhone kan de browser de exportresolutie verlagen, ook als het canvas 1080 × 1920 is. Deze aparte export probeert elk frame op volledige resolutie te coderen met een module die in onze eigen repository staat. De standaardexport blijft beschikbaar.</p>
+<p class="hint">De ODR-lijn blijft flinterdun en wordt vlak wanneer de gedachte verschijnt. De export houdt de audiostream ook tijdens de afsluitende stilte actief. Op iPhone kan de browser de exportresolutie verlagen, ook als het canvas 1080 × 1920 is. Deze aparte export probeert elk frame op volledige resolutie te coderen met een module die in onze eigen repository staat. De standaardexport blijft beschikbaar. De Full HD-video wordt pas op je iPhone opgeslagen nadat je op ‘Bewaar Full HD-video op iPhone’ tikt en ‘Bewaar in Bestanden’ kiest.</p>
 </section></div></main>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d');
-let previewAudio=null,previewUrl=null,audioBuffer=null,envelope=null,audioCtx=null,source=null,recorder=null,stream=null,raf=0,running=false;
+let previewAudio=null,previewUrl=null,audioBuffer=null,envelope=null,audioCtx=null,source=null,recorder=null,stream=null,raf=0,running=false,latestHdBlob=null,latestHdName='ODR-De-Fluistering-FullHD.mp4',latestHdUrl=null;
 const W=1080,H=1920,TAU=Math.PI*2;
 const diagnosticKey='odr-fluistering-fullhd-last-result-v1';
+
+function openVideoStore(){
+ return new Promise((resolve,reject)=>{
+  const req=indexedDB.open('odr-fluistering-video',1);
+  req.onupgradeneeded=()=>req.result.createObjectStore('files');
+  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+ });
+}
+async function rememberVideo(blob,name){
+ const db=await openVideoStore();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction('files','readwrite');tx.objectStore('files').put({blob,name},'lastFullHD');
+  tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)};
+ });
+}
+async function restoreVideo(){
+ try{
+  const db=await openVideoStore();
+  const entry=await new Promise((resolve,reject)=>{
+   const tx=db.transaction('files','readonly'),req=tx.objectStore('files').get('lastFullHD');
+   req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+  });db.close();if(entry?.blob)presentVideo(entry.blob,entry.name);
+ }catch(e){}
+}
+function presentVideo(blob,name){
+ latestHdBlob=blob;latestHdName=name;
+ if(latestHdUrl)URL.revokeObjectURL(latestHdUrl);
+ latestHdUrl=URL.createObjectURL(blob);
+ $('saveHD').style.display='inline-block';
+ const link=$('downloadHD');link.href=latestHdUrl;link.download=name;link.style.display='inline-block';
+}
+$('saveHD').onclick=async()=>{
+ if(!latestHdBlob)return;
+ const file=new File([latestHdBlob],latestHdName,{type:'video/mp4'});
+ try{
+  if(navigator.canShare?.({files:[file]})&&navigator.share){
+   await navigator.share({files:[file],title:'De Fluistering — Full HD'});
+   saveDiagnostic('Deelmenu geopend. Kies ‘Bewaar in Bestanden’ om de MP4 op je iPhone te bewaren.');
+  }else{
+   $('downloadHD').click();
+   saveDiagnostic('Het bestand is geopend. Kies de deelknop en daarna ‘Bewaar in Bestanden’.');
+  }
+ }catch(e){if(e.name!=='AbortError')saveDiagnostic('Opslaan via deelmenu mislukt: '+e.message+'. Probeer ‘Open MP4-bestand’.')}
+};
+
 function saveDiagnostic(message){
  try{localStorage.setItem(diagnosticKey,JSON.stringify({message,date:new Date().toLocaleString('nl-NL')}))}catch(e){}
  $('status').textContent=message;
@@ -170,13 +215,16 @@ async function fullHD(){
   const report=isHD?'✓ Full HD bevestigd: '+encodedSize+'. MP4 met geluid geëxporteerd.':'Export voltooid, maar Full HD niet bevestigd. Canvas: '+sourceSize+'. Video: '+encodedSize+'. Stuur deze gegevens door voor de volgende stap.';
   // Persist before opening the iPhone file viewer, which can unload this page.
   saveDiagnostic(report);
-  const a=document.createElement('a');a.href=url;a.download=isHD?'ODR-De-Fluistering-FullHD.mp4':'ODR-De-Fluistering-Test.mp4';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  const name=isHD?'ODR-De-Fluistering-FullHD.mp4':'ODR-De-Fluistering-Test.mp4';
+  presentVideo(blob,name);
+  try{await rememberVideo(blob,name);saveDiagnostic(report+' Het bestand staat klaar. Tik op ‘Bewaar Full HD-video op iPhone’ en kies ‘Bewaar in Bestanden’.')}catch(e){saveDiagnostic(report+' Tik nu op ‘Bewaar Full HD-video op iPhone’. Het bestand kon niet lokaal worden bewaard voor later.')}
+  URL.revokeObjectURL(url);
  }catch(e){saveDiagnostic('Full HD niet gelukt: '+e.message+' De standaardexport blijft beschikbaar.')}
  finally{running=false;button.disabled=false;$('export').disabled=false;$('play').disabled=false;render(0)}
 }
 $('hqExport').onclick=fullHD;
 $('play').onclick=()=>start(false);$('export').onclick=()=>start(true);$('stop').onclick=()=>{stop();$('status').textContent='Gestopt.'};
-restoreDiagnostic();
+restoreDiagnostic();restoreVideo();
 ['movement','signature','showThought','thought'].forEach(id=>$(id).addEventListener('input',()=>{if(!running)render()}));render();document.fonts.ready.then(()=>{if(!running)render()});
 })();
 </script></body></html>
