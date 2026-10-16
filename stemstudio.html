@@ -7,7 +7,7 @@
 :root{font-family:"DM Sans",system-ui,sans-serif;color:#eee2d5;background:#18110e}*{box-sizing:border-box}body{margin:0}main{max-width:1120px;margin:auto;padding:34px 22px 75px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}.eyebrow{font-size:11px;letter-spacing:.25em;color:#c7a68d}.tabs{display:flex;flex-wrap:wrap;gap:7px}.tabs a{border:1px solid #614536;color:#e8d5c6;border-radius:9px;padding:10px 12px;font-size:12px;text-decoration:none}.tabs a.active{background:#e8d5c6;color:#271911}h1{font-size:clamp(32px,4vw,46px);font-weight:500;letter-spacing:-.045em;margin:22px 0 4px}p{line-height:1.55;color:#bea897}.layout{display:grid;grid-template-columns:minmax(260px,410px) minmax(320px,1fr);gap:30px;align-items:start;margin-top:25px}.visual{padding:25px 22px;background:#271b15;border:1px solid #50382c;border-radius:17px}.visual canvas{width:100%;height:auto;aspect-ratio:2/1;display:block}.visual .sub{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.07em;color:#b69d8c;margin-top:14px}.panel{padding:26px;background:#261a14;border:1px solid #50382c;border-radius:17px}label{font-size:13px;display:block;margin:0 0 9px;color:#e6d0bf}input[type=file],select{font:inherit;color:#f0e2d6;background:#34251d;border:1px solid #775743;border-radius:9px;padding:12px;width:100%}input[type=file]{font-size:12px}.group{margin-bottom:23px}.hint{font-size:12px;color:#b69d8c}select{font-size:14px}.intensity{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.intensity span{font-size:12px;color:#cbb2a0}input[type=range]{width:100%;accent-color:#e2c7ae}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}button{font:600 14px "DM Sans",sans-serif;padding:13px 16px;border-radius:9px;border:1px solid #987b66;background:transparent;color:#f1e4d8;cursor:pointer}button.primary{background:#e9d8c8;color:#271911;border-color:#e9d8c8}button:disabled{opacity:.45;cursor:wait}.divider{border-top:1px solid #574033;margin:23px 0}.playing{background:#483328!important}.download{display:inline-block;padding:13px 16px;background:#e9d8c8;color:#271911;text-decoration:none;border-radius:9px;font-size:14px;font-weight:600}.tag{font-size:11px;letter-spacing:.16em;color:#c8aa94}#status{min-height:38px}strong{font-weight:500;color:#f1e4d8}@media(max-width:760px){.layout{grid-template-columns:1fr}.panel{padding:18px}main{padding:25px 16px 60px}}
 </style></head>
 <body><main><div class="top"><div class="eyebrow">ONDER DE RUIS / STUDIO</div><nav class="tabs"><a href="./">De Herschrijving</a><a href="doorhaling.html">De Doorhaling</a><a href="fluistering.html">De Fluistering</a><a class="active" href="stemstudio.html">De Stemstudio</a></nav></div>
-<h1>De Stemstudio.</h1><p>Je eigen stem verbeteren. Of experimenteren met een heel ander stemgeluid.</p>
+<h1>De Stemstudio.</h1><p>Je eigen stem verbeteren. Of iets donkerder laten klinken, zonder jezelf kwijt te raken.</p>
 <div class="layout"><div class="visual"><div class="tag">JE STEM, JOUW GELUID</div><canvas id="wave" width="720" height="360" aria-label="Golfvorm van je opname"></canvas><div class="sub"><span id="waveLabel">NOG GEEN OPNAME</span><span id="duration">00:00</span></div><p class="hint">Je opname wordt uitsluitend op dit apparaat verwerkt. Er wordt niets naar een server geüpload.</p></div>
 <section class="panel">
 <div class="group"><label for="audio">01 / Upload je stemopname</label><input id="audio" type="file" accept="audio/*,.m4a,.wav,.mp3,.aac,.ogg"><p class="hint">M4A, WAV en MP3. Werkt ook met opnames van je iPhone.</p></div>
@@ -20,20 +20,20 @@
 <div class="divider"></div>
 <label>06 / Bewaar je opname</label><div id="downloadArea"><button disabled>↓ Download WAV</button></div>
 <p class="hint" id="status" role="status" aria-live="polite">Upload een opname om te beginnen.</p>
-<p class="hint">Bij Verbeteren gebruiken we toonregeling en dynamiekbewerking. Veranderen gebruikt experimentele toonhoogteverschuiving en filtering. Dat kan bij sommige stemmen een hoorbaar digitaal effect geven. Dit is geen AI-stemconversie.</p>
+<p class="hint">Bij Verbeteren gebruiken we toonregeling en dynamiekbewerking. Bij Veranderen houden we de toonhoogte bewust dicht bij je eigen stem en voegen we subtiele klankkleur toe. Dat kan bij sommige stemmen een hoorbaar digitaal effect geven. Dit is geen AI-stemconversie.</p>
 </section></div></main>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
 const wave=$('wave'),ctx=wave.getContext('2d');
 let inputBuffer=null,outputBuffer=null,originalUrl=null,enhancedUrl=null,player=null,busy=false,filename='opname';
-const descriptions={natural:'Een helderdere stem met behoud van je eigen klank.',warm:'Een subtiele warme klank, zonder je stem te veranderen.',close:'Iets meer aanwezigheid, alsof je dichter bij de microfoon spreekt.',calm:'Zachtere volumeverschillen en minder scherpe klanken.',studio:'Een gelijkmatiger volume en een verzorgde, heldere klank.',deep:'Een lagere stem met meer laag. Je spreekt in hetzelfde tempo.',dark:'Een diepe, donkere vertelstem met minder hoge frequenties.',cinema:'Een zware, filmische stem met extra diepte en aanwezigheid.',soft:'Een iets lichtere stem met een zachte klank.'};
+const descriptions={natural:'Een helderdere stem met behoud van je eigen klank.',warm:'Een subtiele warme klank, zonder je stem te veranderen.',close:'Iets meer aanwezigheid, alsof je dichter bij de microfoon spreekt.',calm:'Zachtere volumeverschillen en minder scherpe klanken.',studio:'Een gelijkmatiger volume en een verzorgde, heldere klank.',deep:'Een subtiel lagere stem. De vrouwelijke stemkleur blijft zoveel mogelijk behouden.',dark:'Een warmere, donkerdere stem met een heel kleine toonhoogteverlaging. Niet de anonieme tv-stem.',cinema:'Een voller, zwaarder geluid zonder extreme stemvervorming.',soft:'Een iets lichtere stem met een zachte klank.'};
 const improveOptions=[['natural','Natuurlijk · helder en schoon'],['warm','Warm · voller en zachter'],['close','Dichtbij · intiem en direct'],['calm','Rustig · zachtere pieken'],['studio','Studio · gelijkmatig en verzorgd']];
-const changeOptions=[['deep','Dieper · een lagere stem'],['dark','Donker · mysterieuze vertelstem'],['cinema','Filmisch · diep en krachtig'],['soft','Zachter · iets hoger en lichter']];
+const changeOptions=[['dark','Donker & vrouwelijk · warm en laag'],['deep','Dieper · subtiel lagere stem'],['cinema','Filmisch · voller en zwaarder'],['soft','Zachter · iets hoger en lichter']];
 function setMode(){const change=$('mode').value==='change',list=change?changeOptions:improveOptions;
  $('profile').replaceChildren(...list.map(([value,label])=>{const o=document.createElement('option');o.value=value;o.textContent=label;return o}));
  $('profile').value=change?'dark':'warm';$('description').textContent=descriptions[$('profile').value];$('process').textContent=change?'✦ Verander mijn stem':'✦ Verbeter mijn stem';
- $('intensity').value=change?60:40;$('intensityLabel').textContent=(change?'Effect':'Subtiel')+' · '+$('intensity').value+'%';resetProcessed();
+ $('intensity').value=change?35:40;$('intensityLabel').textContent=(change?'Effect':'Subtiel')+' · '+$('intensity').value+'%';resetProcessed();
 }
 $('mode').onchange=setMode;
 function time(t){const n=Math.floor(t||0);return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0')}
@@ -93,7 +93,8 @@ async function process(){
  if(!inputBuffer||busy)return;busy=true;enable('process',false);enable('original',false);enable('enhanced',false);$('status').textContent='Je stem wordt lokaal verbeterd…';
  try{
   const change=$('mode').value==='change';const raw=inputBuffer,sr=raw.sampleRate,n=raw.length,channels=Math.min(raw.numberOfChannels,2),intensity=Number($('intensity').value)/100,profile=$('profile').value;
-  const ratio=change?(profile==='soft'?1+.15*intensity:profile==='deep'?1-.24*intensity:profile==='dark'?1-.34*intensity:1-.40*intensity):1;
+  const semitones=change?(profile==='soft'?1.2*intensity:profile==='deep'?-2.4*intensity:profile==='dark'?-1.1*intensity:-2.0*intensity):0;
+  const ratio=Math.pow(2,semitones/12);
   const b=change?pitchBuffer(raw,ratio):raw;
   const offline=new OfflineAudioContext(channels,n,sr),src=offline.createBufferSource(),work=offline.createBuffer(channels,n,sr);
   for(let c=0;c<channels;c++)work.copyToChannel(b.getChannelData(c),c);
