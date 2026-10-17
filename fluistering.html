@@ -31,7 +31,7 @@
 <label class="check"><input id="showThought" type="checkbox" checked> Toon de gedachte na de stem (standaard aan; ook in de export)</label>
 <label class="check"><input id="finalDot" type="checkbox" checked> Sluit de gedachte af met een punt (ook in de export)</label>
 <label class="check"><input id="signature" type="checkbox" checked> Kleine ‘onder de ruis.’-signatuur</label>
-<div class="actions"><button id="play">▶ Bekijk en beluister</button><button class="primary" id="hqExport">↓ Maak Full HD-video</button><button id="export" hidden aria-hidden="true" tabindex="-1"></button><button id="downloadMP4" style="display:none;background:#d4b79e;color:#271911">↓ Download Full HD MP4 (PC)</button><button id="saveHD" style="display:none">↓ Bewaar ZIP (iPhone / reservekopie)</button><button id="stop">Stop</button></div>
+<div class="actions"><button id="play">▶ Bekijk en beluister</button><button class="primary" id="hqExport">↓ Maak Full HD-video</button><button id="export" hidden aria-hidden="true" tabindex="-1"></button><button id="downloadMP4" disabled style="background:#d4b79e;color:#271911">↓ Download Full HD MP4 (PC)</button><button id="saveHD" disabled>↓ Bewaar ZIP (iPhone / reservekopie)</button><button id="stop">Stop</button></div>
 <p class="hint" id="status" role="status">Upload een opname om de lijn op je stem te laten reageren.</p>
 <p class="hint">De video wordt gemaakt in 1080 × 1920 pixels, met geluid. Kies na het exporteren op iPhone <strong>Bewaar ZIP</strong> en daarna <strong>Bewaar in Bestanden</strong>. Je ontvangt een ZIP-bestand zodat de iPhone de videokwaliteit niet verlaagt. Tik in Bestanden op de ZIP om de originele MP4 uit te pakken.</p>
 </section></div></main>
@@ -68,15 +68,15 @@ async function restoreVideo(){
 function clearPreviousExport(){
  latestHdBlob=null;latestHdName='ODR-De-Fluistering-FullHD.mp4';
  if(latestHdUrl){URL.revokeObjectURL(latestHdUrl);latestHdUrl=null}
- $('saveHD').style.display='none';
- $('downloadMP4').style.display='none';
+ $('saveHD').disabled=true;
+ $('downloadMP4').disabled=true;
 }
 function presentVideo(blob,name){
  latestHdBlob=blob;latestHdName=name;
  if(latestHdUrl)URL.revokeObjectURL(latestHdUrl);
  latestHdUrl=URL.createObjectURL(blob);
- $('saveHD').style.display='inline-block';
- $('downloadMP4').style.display='inline-block';
+ $('saveHD').disabled=false;
+ $('downloadMP4').disabled=false;
  
 }
 // Direct desktop download: save the original H.264/AAC MP4 without repackaging or re-encoding.
@@ -301,8 +301,9 @@ async function fullHD(){
 $('hqExport').onclick=fullHD;
 $('play').onclick=()=>start(false);$('stop').onclick=()=>{stop();$('status').textContent='Gestopt.'};
 restoreDiagnostic();
- // Do not restore old MP4 download buttons: they can silently deliver an outdated export.
+ // Keep buttons visible and restore the last successful export if one exists.
  clearPreviousExport();
+ restoreVideo();
 ['movement','signature','showThought','thought','lineColor','lineBrightness','lineWidth','finalDot'].forEach(id=>$(id).addEventListener('input',()=>{
  if(id==='lineBrightness')$('lineBrightnessValue').textContent=$('lineBrightness').value+'%';
  if(id==='lineWidth')$('lineWidthValue').textContent=Number($('lineWidth').value).toLocaleString('nl-NL',{maximumFractionDigits:1})+' px';
