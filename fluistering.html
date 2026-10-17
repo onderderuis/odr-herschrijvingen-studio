@@ -18,7 +18,7 @@
 </div>
 <label class="check"><input id="showThought" type="checkbox" checked> Toon de gedachte na de stem (standaard aan; ook in de export)</label>
 <label class="check"><input id="signature" type="checkbox" checked> Kleine ‘onder de ruis.’-signatuur</label>
-<div class="actions"><button id="play">▶ Bekijk en beluister</button><button class="primary" id="hqExport">↓ Maak Full HD-video</button><button id="export" hidden aria-hidden="true" tabindex="-1"></button><button id="saveHD" style="display:none;background:#d4b79e;color:#271911">Bewaar video op iPhone</button><button id="stop">Stop</button></div>
+<div class="actions"><button id="play">▶ Bekijk en beluister</button><button class="primary" id="hqExport">↓ Maak Full HD-video</button><button id="export" hidden aria-hidden="true" tabindex="-1"></button><button id="downloadMP4" style="display:none;background:#d4b79e;color:#271911">↓ Download Full HD MP4 (PC)</button><button id="saveHD" style="display:none">↓ Bewaar ZIP (iPhone / reservekopie)</button><button id="stop">Stop</button></div>
 <p class="hint" id="status" role="status">Upload een opname om de lijn op je stem te laten reageren.</p>
 <p class="hint">De video wordt gemaakt in 1080 × 1920 pixels, met geluid. Kies na het exporteren <strong>Bewaar video op iPhone</strong> en daarna <strong>Bewaar in Bestanden</strong>. Je ontvangt een ZIP-bestand zodat de iPhone de videokwaliteit niet verlaagt. Tik in Bestanden op de ZIP om de originele MP4 uit te pakken.</p>
 </section></div></main>
@@ -57,8 +57,19 @@ function presentVideo(blob,name){
  if(latestHdUrl)URL.revokeObjectURL(latestHdUrl);
  latestHdUrl=URL.createObjectURL(blob);
  $('saveHD').style.display='inline-block';
+ $('downloadMP4').style.display='inline-block';
  
 }
+// Direct desktop download: save the original H.264/AAC MP4 without repackaging or re-encoding.
+$('downloadMP4').onclick=()=>{
+ if(!latestHdBlob){saveDiagnostic('Maak eerst een Full HD-video.');return}
+ const url=URL.createObjectURL(latestHdBlob);
+ const a=document.createElement('a');
+ a.href=url;a.download=latestHdName||'ODR-De-Fluistering-FullHD.mp4';
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),120000);
+ saveDiagnostic('Download van de originele MP4 gestart. Kijk in de map Downloads van je computer. Als je browser de download blokkeert, gebruik dan de ZIP-knop.');
+};
 // ZIP uses the STORE method: the MP4 bytes remain unchanged, preventing
 // iOS share-sheet video transcoding. One file, one central-directory entry.
 function crc32(bytes){
@@ -245,7 +256,7 @@ async function fullHD(){
   saveDiagnostic(report);
   const name=isHD?'ODR-De-Fluistering-FullHD.mp4':'ODR-De-Fluistering-Test.mp4';
   presentVideo(blob,name);
-  try{await rememberVideo(blob,name);saveDiagnostic(report+' Klaar om op te slaan. Tik op ‘Bewaar video op iPhone’ en kies ‘Bewaar in Bestanden’.')}catch(e){saveDiagnostic(report+' Tik nu op ‘Bewaar video op iPhone’. Het bestand kon niet lokaal worden bewaard voor later.')}
+  try{await rememberVideo(blob,name);saveDiagnostic(report+' Klaar om op te slaan. Op je PC: klik op ‘Download Full HD MP4 (PC)’. Op iPhone: gebruik de ZIP-knop en kies ‘Bewaar in Bestanden’.')}catch(e){saveDiagnostic(report+' Download de MP4 direct op je PC of gebruik de ZIP-knop op iPhone. Het bestand kon niet lokaal worden bewaard voor later.')}
   URL.revokeObjectURL(url);
  }catch(e){saveDiagnostic('Full HD niet gelukt: '+e.message+' De standaardexport blijft beschikbaar.')}
  finally{running=false;button.disabled=false;$('play').disabled=false;render(0)}
