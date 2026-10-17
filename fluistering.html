@@ -29,6 +29,7 @@
 </select><p class="hint">De aanpassingen zijn meteen zichtbaar in de voorvertoning én in je Full HD-export. Voor een duidelijke Instagramomslag: probeer Licht ivoor en 85% helderheid.</p>
 </div>
 <label class="check"><input id="showThought" type="checkbox" checked> Toon de gedachte na de stem (standaard aan; ook in de export)</label>
+<label class="check"><input id="finalDot" type="checkbox" checked> Sluit de gedachte af met een punt (ook in de export)</label>
 <label class="check"><input id="signature" type="checkbox" checked> Kleine ‘onder de ruis.’-signatuur</label>
 <div class="actions"><button id="play">▶ Bekijk en beluister</button><button class="primary" id="hqExport">↓ Maak Full HD-video</button><button id="export" hidden aria-hidden="true" tabindex="-1"></button><button id="downloadMP4" style="display:none;background:#d4b79e;color:#271911">↓ Download Full HD MP4 (PC)</button><button id="saveHD" style="display:none">↓ Bewaar ZIP (iPhone / reservekopie)</button><button id="stop">Stop</button></div>
 <p class="hint" id="status" role="status">Upload een opname om de lijn op je stem te laten reageren.</p>
@@ -165,8 +166,8 @@ function render(t=0,duration=0){
    // Final punctuation is drawn as a canvas shape, independent of font glyphs.
    lines.forEach((line,i)=>{
     const y=first+i*font*1.5;
-    const hasFullStop=i===lines.length-1&&line.endsWith('.');
-    const displayLine=hasFullStop?line.slice(0,-1):line;
+    const hasFullStop=i===lines.length-1&&($('finalDot').checked||line.endsWith('.'));
+    const displayLine=hasFullStop&&line.endsWith('.')?line.slice(0,-1):line;
     ctx.fillText(displayLine,cx,y);
     if(hasFullStop){
      const endX=cx+ctx.measureText(displayLine).width/2;
