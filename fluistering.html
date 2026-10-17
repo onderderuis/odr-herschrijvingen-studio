@@ -303,7 +303,7 @@ $('play').onclick=()=>start(false);$('stop').onclick=()=>{stop();$('status').tex
 restoreDiagnostic();
  // Do not restore old MP4 download buttons: they can silently deliver an outdated export.
  clearPreviousExport();
-['movement','signature','showThought','thought','lineColor','lineBrightness','lineWidth'].forEach(id=>$(id).addEventListener('input',()=>{
+['movement','signature','showThought','thought','lineColor','lineBrightness','lineWidth','finalDot'].forEach(id=>$(id).addEventListener('input',()=>{
  if(id==='lineBrightness')$('lineBrightnessValue').textContent=$('lineBrightness').value+'%';
  if(id==='lineWidth')$('lineWidthValue').textContent=Number($('lineWidth').value).toLocaleString('nl-NL',{maximumFractionDigits:1})+' px';
  if(!running)render();
