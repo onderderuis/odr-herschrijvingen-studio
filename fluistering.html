@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{font-family:"DM Sans",system-ui,sans-serif;color:#eee2d5;background:#18110e}*{box-sizing:border-box}body{margin:0}main{max-width:1160px;margin:auto;padding:34px 22px 70px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}.eyebrow{font-size:11px;letter-spacing:.25em;color:#c7a68d}.tabs{display:flex;flex-wrap:wrap;gap:7px}.tabs a{border:1px solid #614536;color:#e8d5c6;border-radius:9px;padding:10px 12px;font-size:12px;text-decoration:none}.tabs a.active{background:#e8d5c6;color:#271911}h1{font-size:clamp(32px,4vw,46px);font-weight:500;letter-spacing:-.045em;margin:20px 0 4px}p{line-height:1.55;color:#bea897}.layout{display:grid;grid-template-columns:minmax(260px,400px) minmax(320px,1fr);gap:30px;align-items:start;margin-top:24px}.preview{width:100%;max-width:400px;margin:auto}canvas{width:100%;height:auto;display:block;background:#271911;border:1px solid #634434}.meta{display:flex;justify-content:space-between;font-size:12px;color:#b9a28f;margin-top:10px}.panel{padding:26px;background:#261a14;border:1px solid #50382c;border-radius:17px}label{font-size:13px;display:block;margin:0 0 9px;color:#e6d0bf}input[type=file],textarea,select{font:inherit;color:#f0e2d6;background:#34251d;border:1px solid #775743;border-radius:9px;padding:12px;width:100%}input[type=file]{font-size:12px}textarea{resize:vertical;min-height:85px}select{font-size:14px}.group{margin-bottom:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.check{display:flex;gap:9px;align-items:center;font-size:13px;color:#e6d0bf;margin:15px 0}.check input{accent-color:#d6bca7}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}button{font:600 14px "DM Sans",sans-serif;padding:13px 16px;border-radius:9px;border:1px solid #987b66;background:transparent;color:#f1e4d8;cursor:pointer}button.primary{background:#e9d8c8;color:#271911;border-color:#e9d8c8}button:disabled{opacity:.45;cursor:wait}.hint{font-size:12px;color:#b69d8c}strong{color:#f1e4d8;font-weight:500}@media(max-width:760px){.layout{grid-template-columns:1fr}.preview{max-width:340px}.panel{padding:18px}}
+:root{font-family:"DM Sans",system-ui,sans-serif;color:#eee2d5;background:#18110e}*{box-sizing:border-box}body{margin:0}main{max-width:1160px;margin:auto;padding:34px 22px 70px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}.eyebrow{font-size:11px;letter-spacing:.25em;color:#c7a68d}.tabs{display:flex;flex-wrap:wrap;gap:7px}.tabs a{border:1px solid #614536;color:#e8d5c6;border-radius:9px;padding:10px 12px;font-size:12px;text-decoration:none}.tabs a.active{background:#e8d5c6;color:#271911}h1{font-size:clamp(32px,4vw,46px);font-weight:500;letter-spacing:-.045em;margin:20px 0 4px}p{line-height:1.55;color:#bea897}.layout{display:grid;grid-template-columns:minmax(260px,400px) minmax(320px,1fr);gap:30px;align-items:start;margin-top:24px}.preview{width:100%;max-width:400px;margin:auto}canvas{width:100%;height:auto;display:block;background:#271911;border:1px solid #634434}.meta{display:flex;justify-content:space-between;font-size:12px;color:#b9a28f;margin-top:10px}.panel{padding:26px;background:#261a14;border:1px solid #50382c;border-radius:17px}label{font-size:13px;display:block;margin:0 0 9px;color:#e6d0bf}input[type=file],textarea,select{font:inherit;color:#f0e2d6;background:#34251d;border:1px solid #775743;border-radius:9px;padding:12px;width:100%}input[type=file]{font-size:12px}textarea{resize:vertical;min-height:85px}select{font-size:14px}.group{margin-bottom:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.check{display:flex;gap:9px;align-items:center;font-size:13px;color:#e6d0bf;margin:15px 0}.check input{accent-color:#d6bca7}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}button{font:600 14px "DM Sans",sans-serif;padding:13px 16px;border-radius:9px;border:1px solid #987b66;background:transparent;color:#f1e4d8;cursor:pointer}button.primary{background:#e9d8c8;color:#271911;border-color:#e9d8c8}button:disabled{opacity:.45;cursor:wait}.hint{font-size:12px;color:#b69d8c}.lineControls{margin:19px 0 8px;padding:18px;border:1px solid #614536;border-radius:12px;background:#2c1e17}.lineControls h2{font-size:14px;font-weight:500;margin:0 0 15px;color:#f0dfcf}.sliderHead{display:flex;justify-content:space-between;align-items:center;gap:12px}.sliderHead output{font-size:12px;color:#c8ab96}.lineControls input[type=range]{width:100%;accent-color:#ddc2ac;margin:3px 0 16px}.lineControls select{margin-bottom:9px}.lineControls .hint{margin:2px 0 0}strong{color:#f1e4d8;font-weight:500}@media(max-width:760px){.layout{grid-template-columns:1fr}.preview{max-width:340px}.panel{padding:18px}}
 </style></head>
 <body><main><div class="top"><div class="eyebrow">ONDER DE RUIS / STUDIO</div><nav class="tabs"><a href="./">De Herschrijving</a><a href="doorhaling.html">De Doorhaling</a><a class="active" href="fluistering.html">De Fluistering</a><a href="stemstudio.html">De Stemstudio</a></nav></div>
 <h1>De Fluistering.</h1><p>Een stem die beweging achterlaat. Wanneer de stem stilvalt, verschijnt de gedachte.</p>
@@ -16,11 +16,23 @@
 <div><label for="movement">Beweging</label><select id="movement"><option value="quiet">Heel subtiel</option><option value="soft" selected>Subtiel</option><option value="alive">Iets levendiger</option></select></div>
 <div><label for="tail">Stilte na de stem</label><select id="tail"><option value="1.5">1,5 seconden</option><option value="3" selected>3 seconden</option><option value="4">4 seconden</option></select></div>
 </div>
+<div class="lineControls"><h2>Lijn aanpassen</h2>
+<div class="sliderHead"><label for="lineBrightness">Helderheid</label><output id="lineBrightnessValue">70%</output></div>
+<input type="range" id="lineBrightness" min="20" max="100" value="70" step="5">
+<div class="sliderHead"><label for="lineWidth">Dikte</label><output id="lineWidthValue">1,6 px</output></div>
+<input type="range" id="lineWidth" min="1" max="4" value="1.6" step="0.2">
+<label for="lineColor">Kleur van de lijn</label><select id="lineColor">
+<option value="#e8d9cb" selected>Warm wit · origineel</option>
+<option value="#f7eadd">Licht ivoor · meer contrast</option>
+<option value="#d6b89e">Zandkleur · subtiel</option>
+<option value="#f4f0e9">Zacht wit · helder</option>
+</select><p class="hint">De aanpassingen zijn meteen zichtbaar in de voorvertoning én in je Full HD-export. Voor een duidelijke Instagramomslag: probeer Licht ivoor en 85% helderheid.</p>
+</div>
 <label class="check"><input id="showThought" type="checkbox" checked> Toon de gedachte na de stem (standaard aan; ook in de export)</label>
 <label class="check"><input id="signature" type="checkbox" checked> Kleine ‘onder de ruis.’-signatuur</label>
 <div class="actions"><button id="play">▶ Bekijk en beluister</button><button class="primary" id="hqExport">↓ Maak Full HD-video</button><button id="export" hidden aria-hidden="true" tabindex="-1"></button><button id="downloadMP4" style="display:none;background:#d4b79e;color:#271911">↓ Download Full HD MP4 (PC)</button><button id="saveHD" style="display:none">↓ Bewaar ZIP (iPhone / reservekopie)</button><button id="stop">Stop</button></div>
 <p class="hint" id="status" role="status">Upload een opname om de lijn op je stem te laten reageren.</p>
-<p class="hint">De video wordt gemaakt in 1080 × 1920 pixels, met geluid. Kies na het exporteren <strong>Bewaar video op iPhone</strong> en daarna <strong>Bewaar in Bestanden</strong>. Je ontvangt een ZIP-bestand zodat de iPhone de videokwaliteit niet verlaagt. Tik in Bestanden op de ZIP om de originele MP4 uit te pakken.</p>
+<p class="hint">De video wordt gemaakt in 1080 × 1920 pixels, met geluid. Kies na het exporteren op iPhone <strong>Bewaar ZIP</strong> en daarna <strong>Bewaar in Bestanden</strong>. Je ontvangt een ZIP-bestand zodat de iPhone de videokwaliteit niet verlaagt. Tik in Bestanden op de ZIP om de originele MP4 uit te pakken.</p>
 </section></div></main>
 <script>
 (()=>{'use strict';
@@ -126,13 +138,17 @@ function render(t=0,duration=0){
  bg();const midY=H*.49,cx=W/2,width=W*.45;
  const intensity=({quiet:9,soft:17,alive:28}[$('movement').value]||17);
  const energy=amp(t),revealed=$('showThought').checked&&audioBuffer&&t>=audioBuffer.duration+.25,active=revealed?0:Math.min(1,Math.pow(energy, .68)*2.8);
- ctx.beginPath();ctx.lineWidth=1.6;ctx.strokeStyle='#e8d9cb';ctx.lineCap='round';ctx.lineJoin='round';
+ ctx.beginPath();
+ ctx.lineWidth=Number($('lineWidth').value);
+ ctx.strokeStyle=$('lineColor').value;
+ ctx.globalAlpha=Number($('lineBrightness').value)/70;
+ ctx.lineCap='round';ctx.lineJoin='round';
  for(let i=0;i<=280;i++){
   const u=i/280,edge=Math.pow(Math.sin(Math.PI*u),1.4);
   const wave=Math.sin(u*TAU*2.25-t*2.1)*.52+Math.sin(u*TAU*3.8+t*1.3)*.29+Math.sin(u*TAU*6.1-t*.8)*.19;
   const x=cx-width/2+u*width,y=midY+edge*wave*intensity*active;
   if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
- }ctx.stroke();
+ }ctx.stroke();ctx.globalAlpha=1;
  if($('signature').checked){ctx.fillStyle='#d5bca8';ctx.textAlign='left';ctx.font='400 22px "DM Sans",sans-serif';ctx.fillText('onder de ruis.',112,H-145)}
  if($('showThought').checked&&audioBuffer&&t>=audioBuffer.duration+.25){
   const text=$('thought').value.trim(),max=820;let font=40,lines=[];
@@ -264,6 +280,10 @@ async function fullHD(){
 $('hqExport').onclick=fullHD;
 $('play').onclick=()=>start(false);$('stop').onclick=()=>{stop();$('status').textContent='Gestopt.'};
 restoreDiagnostic();restoreVideo();
-['movement','signature','showThought','thought'].forEach(id=>$(id).addEventListener('input',()=>{if(!running)render()}));render();document.fonts.ready.then(()=>{if(!running)render()});
+['movement','signature','showThought','thought','lineColor','lineBrightness','lineWidth'].forEach(id=>$(id).addEventListener('input',()=>{
+ if(id==='lineBrightness')$('lineBrightnessValue').textContent=$('lineBrightness').value+'%';
+ if(id==='lineWidth')$('lineWidthValue').textContent=Number($('lineWidth').value).toLocaleString('nl-NL',{maximumFractionDigits:1})+' px';
+ if(!running)render();
+}));render();document.fonts.ready.then(()=>{if(!running)render()});
 })();
 </script></body></html>
