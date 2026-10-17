@@ -64,6 +64,12 @@ async function restoreVideo(){
   });db.close();if(entry?.blob)presentVideo(entry.blob,entry.name);
  }catch(e){}
 }
+function clearPreviousExport(){
+ latestHdBlob=null;latestHdName='ODR-De-Fluistering-FullHD.mp4';
+ if(latestHdUrl){URL.revokeObjectURL(latestHdUrl);latestHdUrl=null}
+ $('saveHD').style.display='none';
+ $('downloadMP4').style.display='none';
+}
 function presentVideo(blob,name){
  latestHdBlob=blob;latestHdName=name;
  if(latestHdUrl)URL.revokeObjectURL(latestHdUrl);
@@ -293,7 +299,9 @@ async function fullHD(){
 }
 $('hqExport').onclick=fullHD;
 $('play').onclick=()=>start(false);$('stop').onclick=()=>{stop();$('status').textContent='Gestopt.'};
-restoreDiagnostic();restoreVideo();
+restoreDiagnostic();
+ // Do not restore old MP4 download buttons: they can silently deliver an outdated export.
+ clearPreviousExport();
 ['movement','signature','showThought','thought','lineColor','lineBrightness','lineWidth'].forEach(id=>$(id).addEventListener('input',()=>{
  if(id==='lineBrightness')$('lineBrightnessValue').textContent=$('lineBrightness').value+'%';
  if(id==='lineWidth')$('lineWidthValue').textContent=Number($('lineWidth').value).toLocaleString('nl-NL',{maximumFractionDigits:1})+' px';
