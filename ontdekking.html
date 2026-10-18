@@ -10,7 +10,7 @@
 <div class="group"><label for="secondFile">02 / Tweede blik</label><input type="file" id="secondFile" accept="image/*"><p class="hint">Kies een tweede versie van dezelfde scène, maar met één betekenisvol verschil. Gebruik liefst dezelfde uitsnede en camerahoek. Zonder upload toont de voorbeeldscène een kleine verandering. Als je alleen de eerste foto uploadt, kun je nog geen video maken.</p></div>
 <div class="group"><label for="palette">03 / ODR-kleurwereld</label><select id="palette"><option value="amber" selected>Warm amber · filmisch</option><option value="cocoa">Diep chocoladebruin</option><option value="soft">Zacht sepia</option></select></div>
 <div class="grid"><div class="group"><label for="duration">Duur</label><select id="duration"><option value="8">8 seconden</option><option value="12" selected>12 seconden</option><option value="15">15 seconden</option></select></div><div class="group"><label for="ending">Eindmoment</label><select id="ending"><option value="question" selected>Een vraag</option><option value="statement">Een gedachte</option><option value="none">Alleen het beeld</option></select></div></div>
-<div class="group"><label for="line">04 / Laatste gedachte</label><textarea id="line">Wat je niet opmerkt, is niet per se afwezig.</textarea><p class="hint">De gedachte verschijnt pas in de laatste twee seconden, rechtstreeks over het beeld, zonder tekstvlak.</p></div>
+<div class="group"><label for="line">04 / Laatste gedachte</label><textarea id="line">Wat je niet opmerkt, is niet per se afwezig.</textarea><p class="hint">De verandering is eerst volledig afgerond. Pas na een stille pauze verschijnt de gedachte in de laatste anderhalve à twee seconden, zonder tekstvlak.</p></div>
 <div class="group"><label for="transition">05 / Overgang tussen beide blikken</label><select id="transition"><option value="gentle" selected>Fluisterzacht · langzame overgang</option><option value="balanced">Vloeiend · iets korter</option><option value="clear">Duidelijk · bewust moment</option></select><p class="hint">De beelden vloeien met een zachte start en uitloop in elkaar over. Geen flits, zoom of plotselinge sprong.</p></div>
 <div class="group"><div class="rangeHead"><label for="scrub">Bekijk elk moment van de overgang</label><output id="scrubValue">0,0 s</output></div><input type="range" id="scrub" min="0" max="12" value="0" step="0.1"><p class="hint">Sleep om de overgang beeld voor beeld te beoordelen. De export gebruikt exact dezelfde overgang.</p></div>
 <label class="check"><input type="checkbox" id="signature" checked> Kleine ‘onder de ruis.’-signatuur</label>
@@ -46,8 +46,10 @@ function render(t=0){
  // Hold the first scene, dissolve through a long continuous interval, then hold the second.
  // Quintic smootherstep has zero velocity AND acceleration at both ends, avoiding a visible jolt.
  const mode=$('transition').value;
- const fadeDuration=mode==='gentle'?duration*.42:mode==='balanced'?duration*.29:duration*.14;
- const changeStart=mode==='gentle'?duration*.30:mode==='balanced'?duration*.37:duration*.44;
+ // Complete the visual change by 65% of the reel, leaving an uninterrupted second look.
+ const changeEnd=duration*.65;
+ const fadeDuration=mode==='gentle'?duration*.41:mode==='balanced'?duration*.30:duration*.16;
+ const changeStart=changeEnd-fadeDuration;
  const blend=Math.max(0,Math.min(1,(t-changeStart)/fadeDuration));
  const eased=blend*blend*blend*(blend*(blend*6-15)+10);
  ctx.fillStyle='#271911';ctx.fillRect(0,0,W,H);
@@ -58,10 +60,11 @@ function render(t=0){
   vignette.addColorStop(0,'rgba(14,8,6,0)');vignette.addColorStop(1,'rgba(14,8,6,.33)');
   ctx.fillStyle=vignette;ctx.fillRect(0,0,W,H);
   if($('signature').checked){ctx.font='34px "DM Sans",sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(237,219,202,.75)';ctx.fillText('onder de ruis.',W/2,H-115)}
-  const endingStart=Math.max(0,duration-2);
+  // After the discovery, hold the finished image before introducing any words.
+  const endingStart=Math.max(changeEnd+1, duration-(duration>=10?1.7:1.5));
   if($('ending').value!=='none'&&t>=endingStart&&$('line').value.trim()){
    // The thought appears only after the visual discovery; no opaque overlay.
-   const p=Math.max(0,Math.min(1,(t-endingStart)/1.25));
+   const p=Math.max(0,Math.min(1,(t-endingStart)/1.0));
    const alpha=p*p*(3-2*p);
    ctx.save();
    ctx.globalAlpha=alpha*.92;
