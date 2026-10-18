@@ -15,7 +15,7 @@
 <label class="check"><input type="checkbox" id="signature" checked> Kleine ‘onder de ruis.’-signatuur</label>
 <div class="actions"><button id="play">▶ Bekijk de ervaring</button><button id="reset">↺ Begin opnieuw</button><button id="compare" type="button">◉ Houd vast: eerste blik</button><button class="primary" id="png">↓ Bewaar stilstaand beeld</button><button class="primary" id="mp4">↓ Maak Full HD MP4</button><button id="downloadMP4" disabled>↓ Download MP4</button><button id="video">↓ WebM (alternatief)</button></div>
 <p class="hint" id="status" role="status">Klaar voor je eerste ontdekking.</p>
-<p class="note">Prototype 5: twee versies van dezelfde scène. De eerste blik zet een verwachting neer; in de tweede blik verandert een echt detail. Dit werkt alleen wanneer je bewust twee beelden kiest die samen een betekenis hebben. Foto’s blijven op je apparaat. Full HD MP4 is beschikbaar waar de browser H.264-encoding ondersteunt.</p>
+<p class="note">Prototype 5: twee versies van dezelfde scène. De eerste blik zet een verwachting neer; in de tweede blik verandert een echt detail. Dit werkt alleen wanneer je bewust twee beelden kiest die samen een betekenis hebben. Foto’s blijven op je apparaat. Full HD MP4 gebruikt een hogere doelbitrate (10 Mbps) voor zachte kleurverlopen. Bij stilstaande scènes kan de werkelijke bitrate lager uitvallen; de browser bepaalt de uiteindelijke compressie. Beschikbaar waar H.264-encoding wordt ondersteund.</p>
 </section></div></main>
 <script>
 (()=>{'use strict';const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d',{alpha:false}),W=1080,H=1920;let img=null,secondImg=null,raf=0,playing=false,start=0,elapsed=0,recording=false,compare=false;
@@ -91,7 +91,7 @@ compareBtn.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter')
 compareBtn.addEventListener('keyup',()=>setCompare(false));
 function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
 $('png').onclick=()=>{render(0);cv.toBlob(b=>b&&download(b,'ODR-De-Ontdekking.png'),'image/png')};
-$('video').onclick=async()=>{if(recording||!requirePair())return;if(!cv.captureStream||!window.MediaRecorder){$('status').textContent='Deze browser ondersteunt deze video-export niet.';return}const mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(x=>MediaRecorder.isTypeSupported(x));if(!mime){$('status').textContent='WebM-export wordt niet ondersteund door deze browser.';return}recording=true;$('video').disabled=true;const stream=cv.captureStream(30),parts=[],rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:7000000});rec.ondataavailable=e=>{if(e.data.size)parts.push(e.data)};rec.onerror=()=>{$('status').textContent='Er ging iets mis tijdens de export.'};rec.onstop=()=>{download(new Blob(parts,{type:mime}),'ODR-De-Ontdekking.webm');stream.getTracks().forEach(t=>t.stop());recording=false;$('video').disabled=false;$('status').textContent='WebM-video opgeslagen.'};$('status').textContent='Video wordt opgenomen. Houd dit tabblad open.';rec.start();play();setTimeout(()=>rec.state!=='inactive'&&rec.stop(),Number($('duration').value)*1000+250)};
+$('video').onclick=async()=>{if(recording||!requirePair())return;if(!cv.captureStream||!window.MediaRecorder){$('status').textContent='Deze browser ondersteunt deze video-export niet.';return}const mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(x=>MediaRecorder.isTypeSupported(x));if(!mime){$('status').textContent='WebM-export wordt niet ondersteund door deze browser.';return}recording=true;$('video').disabled=true;const stream=cv.captureStream(30),parts=[],rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:10000000});rec.ondataavailable=e=>{if(e.data.size)parts.push(e.data)};rec.onerror=()=>{$('status').textContent='Er ging iets mis tijdens de export.'};rec.onstop=()=>{download(new Blob(parts,{type:mime}),'ODR-De-Ontdekking.webm');stream.getTracks().forEach(t=>t.stop());recording=false;$('video').disabled=false;$('status').textContent='WebM-video opgeslagen.'};$('status').textContent='Video wordt opgenomen. Houd dit tabblad open.';rec.start();play();setTimeout(()=>rec.state!=='inactive'&&rec.stop(),Number($('duration').value)*1000+250)};
 
 let latestMp4=null;
 $('downloadMP4').onclick=()=>{if(latestMp4)download(latestMp4,'ODR-De-Ontdekking-FullHD.mp4')};
@@ -104,10 +104,11 @@ $('mp4').onclick=async()=>{
   if(!window.VideoEncoder)throw Error('Full HD-encoder niet ondersteund door deze browser');
   await document.fonts.ready;
   const {Output,Mp4OutputFormat,BufferTarget,CanvasSource}=await import('./vendor/mediabunny.js');
-  const config={codec:'avc1.640028',width:W,height:H,bitrate:6000000,framerate:30};
+  const targetBitrate=10000000; // High-quality target; H.264 encoders may use fewer bits for low-motion scenes.
+  const config={codec:'avc1.640028',width:W,height:H,bitrate:targetBitrate,framerate:30};
   if(!(await VideoEncoder.isConfigSupported(config)).supported)throw Error('H.264 Full HD wordt op dit apparaat niet ondersteund');
   const output=new Output({format:new Mp4OutputFormat(),target:new BufferTarget()});
-  const video=new CanvasSource(cv,{codec:'avc',bitrate:6000000});
+  const video=new CanvasSource(cv,{codec:'avc',bitrate:targetBitrate});
   output.addVideoTrack(video,{frameRate:30});
   await output.start();
   const duration=Number($('duration').value),fps=30,count=Math.ceil(duration*fps);
@@ -120,7 +121,7 @@ $('mp4').onclick=async()=>{
   const blob=new Blob([output.target.buffer],{type:'video/mp4'});
   if(blob.size<10000)throw Error('Het bestand is onverwacht klein');
   latestMp4=blob;$('downloadMP4').disabled=false;
-  $('status').textContent='Full HD MP4 gereed ('+(blob.size/1048576).toFixed(1)+' MB). Klik op Download MP4.';
+  $('status').textContent='Full HD MP4 gereed ('+(blob.size/1048576).toFixed(1)+' MB). Export ingesteld op maximaal 10 Mbps; de werkelijke bitrate hangt af van de beelden en de browser. Klik op Download MP4.';
  }catch(e){$('status').textContent='MP4-export niet gelukt: '+e.message+'. WebM blijft beschikbaar.'}
  finally{recording=false;$('mp4').disabled=false;$('video').disabled=false;render(0)}
 };
