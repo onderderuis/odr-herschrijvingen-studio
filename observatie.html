@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>De Observatie — Onder de Ruis</title>
+<meta name="description" content="Maak een rustige ODR-observatie, omcirkel wat je herkent en bewaar de afbeelding voor Instagram.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{font-family:'DM Sans',system-ui,sans-serif;color:#2d2019;background:#f4eee6}*{box-sizing:border-box}body{margin:0}main{max-width:1160px;margin:auto;padding:32px 24px 64px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.eyebrow{font-size:11px;letter-spacing:.25em;color:#745a49}a{color:inherit}nav{display:flex;flex-wrap:wrap;gap:7px}nav a{font-size:12px;text-decoration:none;border:1px solid #d9c7b7;border-radius:7px;padding:9px 12px}nav a[aria-current]{background:#39251a;color:#fff8f1}h1{font-size:clamp(32px,5vw,46px);font-weight:500;letter-spacing:-.045em;margin:26px 0 6px}p{color:#7a6659;line-height:1.6}.intro{margin:0 0 27px}.layout{display:grid;grid-template-columns:minmax(270px,450px) minmax(300px,1fr);gap:30px;align-items:start}.preview{width:100%;max-width:450px;margin:auto}canvas{display:block;width:100%;height:auto;border:1px solid #d6c6b7;background:#f5efe6}.meta{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.06em;color:#856d5b;margin-top:12px}.panel{padding:26px;background:#f8f2eb;border:1px solid #decfc1;border-radius:18px}label{display:block;font-size:13px;margin:0 0 10px}textarea,select{font:inherit;width:100%;padding:13px;border:1px solid #cbb7a5;border-radius:9px;color:#2d2019;background:#fffaf5}textarea{resize:vertical;min-height:190px;line-height:1.7}select{font-size:14px}button{font:500 14px 'DM Sans',system-ui,sans-serif;padding:12px 15px;border:1px solid #a9917f;border-radius:9px;background:transparent;color:#39251a;cursor:pointer}button.primary{background:#39251a;border-color:#39251a;color:#fff8f1}button:disabled{opacity:.45;cursor:default}button:focus-visible,a:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #805b40;outline-offset:3px}.selection-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.hint{font-size:12px;color:#897568;margin:12px 0 20px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:24px}#status{font-size:13px;min-height:42px;margin-bottom:0}#savedImage{display:block;width:100%;height:auto;margin-top:12px;border:1px solid #decfc1}details{margin-top:20px;font-size:12px;color:#7a6659}summary{cursor:pointer}#saveResult{margin-top:20px;border-top:1px solid #decfc1;padding-top:10px}[hidden]{display:none!important}@media(max-width:760px){main{padding:22px 16px 45px}.layout{grid-template-columns:1fr}.preview{max-width:360px}.panel{padding:20px}.top{gap:14px}nav a{padding:8px}h1{margin-top:24px}.controls{gap:12px}.actions button{flex:1}}
+</style>
+</head>
+<body><main>
+<div class="top"><div class="eyebrow">ONDER DE RUIS / STUDIO</div><nav aria-label="Studioformats"><a href="./">De Herschrijving</a><a href="doorhaling.html">De Doorhaling</a><a href="fluistering.html">De Fluistering</a><a href="stemstudio.html">De Stemstudio</a><a href="ontdekking.html">De Ontdekking</a><a href="observatie.html" aria-current="page">De Observatie</a></nav></div>
+<h1>De Observatie.</h1><p class="intro">Een gedachte om bij stil te staan. Omcirkel wat je herkent.</p>
+<div class="layout"><div class="preview"><canvas id="canvas" width="1080" height="1350" role="img" aria-label="Voorbeeld van je observatie"></canvas><div class="meta"><span id="dimensions">INSTAGRAM · 1080 × 1350</span><span>PNG</span></div></div>
+<section class="panel" aria-label="Observatie maken">
+<label for="text">01 / Jouw observatie</label>
+<textarea id="text" spellcheck="true" maxlength="1200">Wat je vroeger hielp
+[[om erbij te horen]],
+kan nog steeds
+meebeslissen.</textarea>
+<div class="selection-actions"><button id="mark" type="button">Omcirkel selectie</button><button id="clear" type="button">Verwijder cirkel</button></div>
+<p class="hint">Selecteer woorden in de tekst en tik op ‘Omcirkel selectie’. Je kunt ook [[dubbele haken]] om die woorden zetten. Een nieuwe regel neem je over met Enter.</p>
+<div class="controls"><div><label for="format">02 / Formaat</label><select id="format"><option value="portrait">Instagram · 4:5</option><option value="square">Vierkant · 1:1</option></select></div><div><label for="example">Voorbeeld laden</label><select id="example"><option value="">Kies een observatie…</option><option value="belong">Erbij horen</option><option value="return">Terugkeren</option><option value="self">Zelfbeeld</option></select></div></div>
+<p class="hint">Tekstgrootte, witruimte en cirkel passen automatisch mee. Je laatste tekst wordt op dit apparaat bewaard.</p>
+<div class="actions"><button class="primary" id="download" type="button">↓ Download afbeelding</button></div>
+<p id="status" role="status" aria-live="polite">Studio gereed.</p>
+<div id="saveResult" hidden><p class="hint">Op je iPhone kun je deze afbeelding ook ingedrukt houden en bewaren in Foto’s.</p><img id="savedImage" alt="Je geëxporteerde observatie"><a id="saveLink" download>Download PNG opnieuw</a></div>
+<details><summary>Over deze vorm</summary><p>Een vast rustig vlak, een kleine ‘een observatie’-vermelding en de signatuur van Onder de Ruis. De open cirkel volgt je woorden als een aantekening tijdens het lezen.</p></details>
+</section></div></main>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),canvas=$('canvas'),ctx=canvas.getContext('2d');
+const storageKey='odr.observatie.v1',family='"DM Sans",system-ui,sans-serif';
+const examples={belong:'Wat je vroeger hielp\n[[om erbij te horen]],\nkan nog steeds\nmeebeslissen.',return:'Waar keer je [[steeds naar terug]], ook als het in geen van je plannen past?',self:'Welke overtuiging [[over jezelf]] heb je al lang niet meer aan je leven getoetst?'};
+let exporting=false,currentURL=null;
+const strip=s=>s.replace(/\[\[|\]\]/g,'');
+function parse(source){
+ source=source.replace(/\r\n?/g,'\n');
+ const open=source.indexOf('[['),close=source.indexOf(']]');
+ if(open<0&&close<0)return{text:source,start:-1,end:-1};
+ if(open<0||close<open||source.indexOf('[[',open+2)>=0||source.indexOf(']]',close+2)>=0)throw Error('Gebruik één paar [[ en ]] om de woorden die je wilt omcirkelen.');
+ let marked=source.slice(open+2,close),left=marked.length-marked.trimStart().length,right=marked.trimEnd().length;
+ if(!marked.trim())throw Error('Zet woorden tussen de dubbele haken om ze te omcirkelen.');
+ return{text:source.slice(0,open)+marked+source.slice(close+2),start:open+left,end:open+right};
+}
+function unitsFor(p,font,max){
+ ctx.font='400 '+font+'px '+family;
+ const units=[];
+ function append(text,offset){for(const m of text.matchAll(/\n|[^\S\n]+|[^\s]+/g))units.push({text:m[0],start:offset+m.index,end:offset+m.index+m[0].length});}
+ const marked=p.text.slice(p.start,p.end);
+ if(p.start>=0&&!marked.includes('\n')&&ctx.measureText(marked).width<=max){append(p.text.slice(0,p.start),0);units.push({text:marked,start:p.start,end:p.end});append(p.text.slice(p.end),p.end);}
+ else append(p.text,0);
+ return units;
+}
+function wrap(p,font,max){
+ const units=unitsFor(p,font,max),lines=[];let line=null;
+ function push(){if(line){lines.push({...line,text:line.text.trimEnd()});line=null;}}
+ for(const u of units){
+  if(u.text==='\n'){if(line)push();else lines.push({text:'',start:u.start,end:u.start});continue;}
+  if(!line&&/^\s+$/.test(u.text))continue;
+  if(ctx.measureText(u.text.trim()).width>max)return null;
+  const combined=(line?line.text:'')+u.text;
+  if(line&&ctx.measureText(combined.trimEnd()).width>max){push();if(/^\s+$/.test(u.text))continue;}
+  if(!line)line={text:u.text,start:u.start,end:u.end};else{line.text+=u.text;line.end=u.end;}
+ }
+ push();return lines;
+}
+function plan(p,h){
+ const max=800,area=h===1080?480:620;
+ for(let font=68;font>=40;font-=2){
+  const lines=wrap(p,font,max),lh=font*1.62;
+  if(lines&&lines.length&&lines.length<=8&&font+(lines.length-1)*lh<=area)return{lines,font,lh};
+ }
+ throw Error('Deze observatie is te lang voor een rustige kaart. Verkort de tekst of gebruik minder regeleinden.');
+}
+function circle(x,y,width,font){
+ const cx=x+width/2,cy=y-font*.34,rx=width/2+font*.29,ry=font*.75;
+ ctx.strokeStyle='#392c23';ctx.lineWidth=2.1;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
+ for(let i=0;i<=110;i++){
+  const t=.16+i/110*(Math.PI*2-.29),r=1+.017*Math.sin(3*t+.8)+.009*Math.cos(5*t),px=cx+rx*Math.cos(t)*r,py=cy+ry*Math.sin(t)*r-.016*rx*Math.cos(t);
+  if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+ }
+ ctx.stroke();
+}
+function paint(p,layout,h){
+ ctx.fillStyle='#f5efe6';ctx.fillRect(0,0,1080,h);ctx.textBaseline='alphabetic';ctx.textAlign='left';
+ ctx.fillStyle='#816e5e';ctx.font='400 20px '+family;ctx.fillText('een observatie',140,166);
+ const {lines,font,lh}=layout,y0=h*.48-((lines.length-1)*lh)/2+font*.34;
+ ctx.fillStyle='#392c23';ctx.font='400 '+font+'px '+family;
+ for(let i=0;i<lines.length;i++){
+  const line=lines[i],y=y0+i*lh;ctx.fillText(line.text,140,y);
+  const a=Math.max(line.start,p.start),b=Math.min(line.start+line.text.length,p.end);
+  if(p.start>=0&&b>a){const before=line.text.slice(0,a-line.start),marked=line.text.slice(a-line.start,b-line.start);if(marked.trim())circle(140+ctx.measureText(before).width,y,ctx.measureText(marked).width,font);}
+ }
+ ctx.font='400 22px '+family;ctx.fillStyle='#816e5e';ctx.fillText('onder de ruis.',140,h-118);
+}
+function persist(){try{localStorage.setItem(storageKey,JSON.stringify({text:$('text').value,format:$('format').value}));}catch{/* The editor also works without local storage. */}}
+function invalidateExport(){if(currentURL){URL.revokeObjectURL(currentURL);currentURL=null;}$('saveResult').hidden=true;$('savedImage').removeAttribute('src');$('saveLink').removeAttribute('href');}
+function draw(){
+ const h=$('format').value==='square'?1080:1350;canvas.width=1080;canvas.height=h;
+ $('dimensions').textContent=(h===1080?'VIERKANT':'INSTAGRAM')+' · 1080 × '+h;
+ try{
+  const p=parse($('text').value);if(!p.text.trim())throw Error('Schrijf eerst een observatie.');if(p.text.length>600)throw Error('Houd je observatie onder de 600 tekens.');
+  const layout=plan(p,h);paint(p,layout,h);
+  canvas.setAttribute('aria-label',p.text+(p.start>=0?' — omcirkeld: '+p.text.slice(p.start,p.end):''));
+  $('download').disabled=exporting;$('status').textContent=p.start>=0?'Klaar om te bewaren.':'Selecteer eventueel woorden om te omcirkelen. Je kunt ook zonder cirkel exporteren.';return true;
+ }catch(error){ctx.fillStyle='#f5efe6';ctx.fillRect(0,0,1080,h);canvas.setAttribute('aria-label','Nog geen geldige observatie');$('download').disabled=true;$('status').textContent=error.message;return false;}
+}
+function update(){invalidateExport();persist();draw();}
+$('mark').addEventListener('click',()=>{
+ const field=$('text'),raw=field.value,a=field.selectionStart,b=field.selectionEnd;
+ if(a===b||!strip(raw.slice(a,b)).trim()){$('status').textContent='Selecteer eerst de woorden in je tekst die je wilt omcirkelen.';return;}
+ const plain=strip(raw),start=strip(raw.slice(0,a)).length,end=strip(raw.slice(0,b)).length;
+ field.value=plain.slice(0,start)+'[['+plain.slice(start,end)+']]'+plain.slice(end);update();field.focus();field.setSelectionRange(start+2,end+2);
+});
+$('clear').addEventListener('click',()=>{$('text').value=strip($('text').value);update();});
+$('text').addEventListener('input',()=>{$('example').value='';update();});$('format').addEventListener('change',update);
+$('example').addEventListener('change',()=>{if(examples[$('example').value]){$('text').value=examples[$('example').value];update();}});
+$('download').addEventListener('click',async()=>{
+ if(exporting)return;exporting=true;let valid=false;$('download').disabled=true;
+ const controls=['text','format','example','mark','clear'];controls.forEach(id=>$(id).disabled=true);
+ try{
+  await document.fonts.ready;valid=draw();if(!valid)return;
+  const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Bewaren is niet gelukt. Probeer het opnieuw.')),'image/png'));
+  invalidateExport();currentURL=URL.createObjectURL(blob);const filename='ODR-De-Observatie-1080x'+canvas.height+'.png';
+  $('savedImage').src=currentURL;$('saveLink').href=currentURL;$('saveLink').download=filename;$('saveResult').hidden=false;
+  const a=document.createElement('a');a.href=currentURL;a.download=filename;document.body.append(a);a.click();a.remove();
+  $('status').textContent='Afbeelding gereed · '+filename;
+ }catch(error){$('status').textContent=error.message;}finally{exporting=false;controls.forEach(id=>$(id).disabled=false);$('download').disabled=!valid;}
+});
+try{const saved=JSON.parse(localStorage.getItem(storageKey));if(saved&&typeof saved.text==='string'){$('text').value=saved.text;if(['square','portrait'].includes(saved.format))$('format').value=saved.format;}}catch{/* Start with the example if a saved draft cannot be read. */}
+draw();document.fonts.ready.then(draw);
+})();
+</script></body></html>
