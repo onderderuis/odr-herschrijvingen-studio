@@ -27,7 +27,7 @@ meebeslissen.</textarea>
 <div class="actions"><button class="primary" id="download" type="button">↓ Download afbeelding</button></div>
 <p id="status" role="status" aria-live="polite">Studio gereed.</p>
 <div id="saveResult" hidden><p class="hint">Op je iPhone kun je deze afbeelding ook ingedrukt houden en bewaren in Foto’s.</p><img id="savedImage" alt="Je geëxporteerde observatie"><a id="saveLink" download>Download PNG opnieuw</a></div>
-<details><summary>Over deze vorm</summary><p>Een vast rustig vlak, een kleine ‘een observatie’-vermelding en de signatuur van Onder de Ruis. De open cirkel volgt je woorden als een aantekening tijdens het lezen.</p></details>
+<details><summary>Over deze vorm</summary><p>Een vast rustig vlak, een kleine ‘een observatie’-vermelding en de signatuur van Onder de Ruis. Twee losse penhalen volgen je woorden. De tweede cirkel blijft open, als een snelle aantekening tijdens het lezen.</p></details>
 </section></div></main>
 <script>
 (()=>{'use strict';
@@ -76,13 +76,21 @@ function plan(p,h){
  throw Error('Deze observatie is te lang voor een rustige kaart. Verkort de tekst of gebruik minder regeleinden.');
 }
 function circle(x,y,width,font){
- const cx=x+width/2,cy=y-font*.34,rx=width/2+font*.29,ry=font*.75;
- ctx.strokeStyle='#392c23';ctx.lineWidth=2.1;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
- for(let i=0;i<=110;i++){
-  const t=.16+i/110*(Math.PI*2-.29),r=1+.017*Math.sin(3*t+.8)+.009*Math.cos(5*t),px=cx+rx*Math.cos(t)*r,py=cy+ry*Math.sin(t)*r-.016*rx*Math.cos(t);
-  if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+ const cx=x+width/2,cy=y-font*.34,rx=width/2+font*.31,ry=font*.76;
+ ctx.strokeStyle='#392c23';ctx.lineCap='round';ctx.lineJoin='round';
+ // Two loose pen passes: a full first loop and an unfinished return.
+ for(let pass=0;pass<2;pass++){
+  const start=pass===0?-.55:-.38,sweep=pass===0?Math.PI*2+.10:Math.PI*1.68;
+  ctx.lineWidth=pass===0?2.2:1.85;ctx.beginPath();
+  for(let i=0;i<=150;i++){
+   const u=i/150,t=start+u*sweep;
+   const wobble=1+.027*Math.sin(2*t+.65+pass*.8)+.013*Math.cos(5*t+pass*.5);
+   const px=cx+pass*font*.065+rx*(1+pass*.014)*Math.cos(t)*wobble;
+   const py=cy-pass*font*.045+ry*(1-pass*.06)*Math.sin(t)*(1+.045*Math.cos(3*t+pass))-.014*rx*Math.cos(t);
+   if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+  }
+  ctx.stroke();
  }
- ctx.stroke();
 }
 function paint(p,layout,h){
  ctx.fillStyle='#f5efe6';ctx.fillRect(0,0,1080,h);ctx.textBaseline='alphabetic';ctx.textAlign='left';
