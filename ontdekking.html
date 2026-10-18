@@ -64,7 +64,7 @@ function render(t=0){
   }
   if($('signature').checked){ctx.font='34px "DM Sans",sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(237,219,202,.75)';ctx.fillText('onder de ruis.',W/2,H-115)}
   // After the discovery, hold the finished image before introducing any words.
-  const endingStart=Math.max(changeEnd+1, duration-(duration>=10?1.7:1.5));
+  const endingStart=Math.max(changeEnd+.2, duration-(duration>=10?4:2.7));
   if($('ending').value!=='none'&&t>=endingStart&&$('line').value.trim()){
    // The thought appears only after the visual discovery; no opaque overlay.
    const p=Math.max(0,Math.min(1,(t-endingStart)/1.0));
