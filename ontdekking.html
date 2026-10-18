@@ -13,11 +13,12 @@
 <div class="grid"><div class="group"><label for="duration">Duur</label><select id="duration"><option value="8">8 seconden</option><option value="12" selected>12 seconden</option><option value="15">15 seconden</option></select></div><div class="group"><label for="ending">Laatste moment</label><select id="ending"><option value="question" selected>Een vraag</option><option value="statement">Een gedachte</option><option value="none">Alleen het beeld</option></select></div></div>
 <div class="group"><label for="line">03 / Eindtekst</label><textarea id="line">hoe lang keek je voordat je het zag?</textarea></div>
 <div class="rangeHead"><label for="light">Helderheid van het verborgen beeld</label><output id="lightValue">50%</output></div><input type="range" id="light" min="15" max="100" value="50" step="5">
-<div class="rangeHead"><label for="shift">Subtiele verandering tijdens de video</label><output id="shiftValue">8%</output></div><input type="range" id="shift" min="0" max="25" value="8" step="1"><p class="hint">Op 0% verandert het beeld helemaal niet. Dat is de zuiverste vorm van De Ontdekking.</p>
+<div class="group"><label for="experience">05 / Manier van ontdekken</label><select id="experience"><option value="still" selected>Stilte · het beeld verandert niet</option><option value="slow">Verschuiving · bijna onmerkbaar</option></select><p class="hint" id="experienceHint">Het beeld blijft precies hetzelfde. Alleen je aandacht kan veranderen.</p></div>
+<div class="rangeHead"><label for="shift">Subtiele verandering tijdens de video</label><output id="shiftValue">8%</output></div><input type="range" id="shift" min="0" max="25" value="8" step="1" disabled><p class="hint">Alleen beschikbaar bij Verschuiving. Het effect blijft subtiel en gebruikt uitsluitend details die al in je foto zitten.</p>
 <label class="check"><input type="checkbox" id="signature" checked> Kleine ‘onder de ruis.’-signatuur</label>
 <div class="actions"><button id="play">▶ Bekijk de ervaring</button><button id="reset">↺ Begin opnieuw</button><button id="compare" type="button">◉ Houd vast: origineel</button><button class="primary" id="png">↓ Bewaar stilstaand beeld</button><button class="primary" id="mp4">↓ Maak Full HD MP4</button><button id="downloadMP4" disabled>↓ Download MP4</button><button id="video">↓ WebM (alternatief)</button></div>
 <p class="hint" id="status" role="status">Klaar voor je eerste ontdekking.</p>
-<p class="note">Prototype 3: echte fotografische details worden subtiel versterkt rond je gekozen ontdekkingspunt. Het volledige beeld is er vanaf het begin; er is geen plotselinge onthulling. De nieuwe Full HD-export maakt een MP4 van 1080 × 1920 pixels met H.264, zonder geluid. WebM blijft als alternatief beschikbaar.</p>
+<p class="note">Prototype 4: kies tussen een volledig stilstaand beeld en een nauwelijks merkbare verandering in echte fotografische details. Het volledige beeld is er vanaf het begin; er is geen plotselinge onthulling. De nieuwe Full HD-export maakt een MP4 van 1080 × 1920 pixels met H.264, zonder geluid. WebM blijft als alternatief beschikbaar.</p>
 </section></div></main>
 <script>
 (()=>{'use strict';const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d',{alpha:false}),W=1080,H=1920;let img=null,raf=0,playing=false,start=0,elapsed=0,recording=false,focusX=.5,focusY=.5,compare=false;
@@ -58,7 +59,7 @@ if(compare){cover(ctx,img||demo)}else{
  ctx.fillStyle=palette==='amber'?'#2b170f':palette==='cocoa'?'#1c100e':'#39251b';
  ctx.globalAlpha=palette==='cocoa'?.24:.15;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;
  const strength={easy:.34,medium:.52,hard:.69}[$('difficulty').value];
- const light=Number($('light').value)/100,shift=Number($('shift').value)/100;
+ const light=Number($('light').value)/100,shift=$('experience').value==='slow'?Number($('shift').value)/100:0;
  const obscurity=Math.min(.91,Math.max(.12,strength+(1-light)*.26-shift*(t/duration)));
  // Uniform veil makes the scene subdued, but never hides or replaces any part of it.
  ctx.fillStyle='#211610';ctx.globalAlpha=obscurity;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;
@@ -82,7 +83,15 @@ function frame(now){if(!playing)return;elapsed=Math.min(Number($('duration').val
 function play(){cancelAnimationFrame(raf);elapsed=0;playing=true;start=performance.now();raf=requestAnimationFrame(frame)}
 $('play').onclick=play;$('reset').onclick=()=>{cancelAnimationFrame(raf);playing=false;elapsed=0;render(0)};
 $('file').onchange=()=>{const file=$('file').files?.[0];if(!file)return;const url=URL.createObjectURL(file),i=new Image();i.onload=()=>{img=i;detailDirty=true;URL.revokeObjectURL(url);render(0);$('status').textContent='Foto geladen. Probeer de moeilijkheidsgraad.'};i.onerror=()=>{$('status').textContent='Dit beeld kon niet worden geopend.';URL.revokeObjectURL(url)};i.src=url};
-['difficulty','light','shift','duration','ending','line','signature','palette','focus'].forEach(id=>$(id).addEventListener('input',()=>{if(id==='light'||id==='shift')$(id+'Value').textContent=$(id).value+'%';if(id==='palette')detailDirty=true;if(!playing)render(0)}));
+function updateExperience(){
+ const slow=$('experience').value==='slow';
+ $('shift').disabled=!slow;
+ $('shiftValue').textContent=slow?$('shift').value+'%':'0%';
+ $('experienceHint').textContent=slow?'De foto wordt heel langzaam iets helderder rond het gekozen detail. Geen beweging, geen plotselinge onthulling.':'Het beeld blijft precies hetzelfde. Alleen je aandacht kan veranderen.';
+ if(!playing)render(0);
+}
+['difficulty','light','shift','duration','ending','line','signature','palette','focus'].forEach(id=>$(id).addEventListener('input',()=>{if(id==='light')$('lightValue').textContent=$('light').value+'%';if(id==='shift')$('shiftValue').textContent=$('shift').value+'%';if(id==='palette')detailDirty=true;if(!playing)render(0)}));
+$('experience').addEventListener('change',updateExperience);
 cv.addEventListener('click',e=>{if($('focus').value!=='manual'||recording)return;const box=cv.getBoundingClientRect();focusX=Math.max(0,Math.min(1,(e.clientX-box.left)/box.width));focusY=Math.max(0,Math.min(1,(e.clientY-box.top)/box.height));detailDirty=true;if(!playing)render(0);$('status').textContent='Ontdekkingspunt ingesteld. Bekijk de ervaring opnieuw.'});
 const compareBtn=$('compare');const setCompare=value=>{compare=value;if(!playing)render(0)};
 compareBtn.addEventListener('pointerdown',e=>{compareBtn.setPointerCapture(e.pointerId);setCompare(true)});
@@ -125,6 +134,6 @@ $('mp4').onclick=async()=>{
  finally{recording=false;$('mp4').disabled=false;$('video').disabled=false;render(0)}
 };
 
-document.fonts.ready.then(()=>render(0));render(0);
+document.fonts.ready.then(()=>render(0));updateExperience();
 })();
 </script></body></html>
