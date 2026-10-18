@@ -8,7 +8,7 @@
 <section class="panel">
 <div class="group"><label for="file">01 / Eerste blik</label><input type="file" id="file" accept="image/*"><p class="hint">Kies een foto die op zichzelf een herkenbare scène laat zien. Zonder upload zie je een voorbeeld.</p></div>
 <div class="group"><label for="secondFile">02 / Tweede blik</label><input type="file" id="secondFile" accept="image/*"><p class="hint">Kies een tweede versie van dezelfde scène, maar met één betekenisvol verschil. Gebruik liefst dezelfde uitsnede en camerahoek. Zonder upload toont de voorbeeldscène een kleine verandering. Als je alleen de eerste foto uploadt, kun je nog geen video maken.</p></div>
-<div class="group"><label for="palette">03 / ODR-kleurwereld</label><select id="palette"><option value="amber" selected>Warm amber · filmisch</option><option value="cocoa">Diep chocoladebruin</option><option value="soft">Zacht sepia</option></select></div>
+<div class="group"><label for="palette">03 / ODR-kleurwereld</label><select id="palette"><option value="original" selected>Originele kleuren · onbewerkt (aanbevolen)</option><option value="amber">Warm amber · filmisch</option><option value="cocoa">Diep chocoladebruin</option><option value="soft">Zacht sepia</option></select></div>
 <div class="grid"><div class="group"><label for="duration">Duur</label><select id="duration"><option value="8">8 seconden</option><option value="12" selected>12 seconden</option><option value="15">15 seconden</option></select></div><div class="group"><label for="ending">Eindmoment</label><select id="ending"><option value="question" selected>Een vraag</option><option value="statement">Een gedachte</option><option value="none">Alleen het beeld</option></select></div></div>
 <div class="group"><label for="line">04 / Laatste gedachte</label><textarea id="line">Wat je niet opmerkt, is niet per se afwezig.</textarea><p class="hint">De verandering is eerst volledig afgerond. Pas na een stille pauze verschijnt de gedachte in de laatste anderhalve à twee seconden, zonder tekstvlak.</p></div>
 <div class="group"><label for="transition">05 / Overgang tussen beide blikken</label><select id="transition"><option value="gentle" selected>Fluisterzacht · langzame overgang</option><option value="balanced">Vloeiend · iets korter</option><option value="clear">Duidelijk · bewust moment</option></select><p class="hint">De beelden vloeien met een zachte start en uitloop in elkaar over. Geen flits, zoom of plotselinge sprong.</p></div>
@@ -34,6 +34,7 @@ function secondReady(){return(!img&&!secondImg)||!!(img&&secondImg)}
 function requirePair(){if(secondReady())return true;$('status').textContent='Voeg ook de '+(img?'tweede':'eerste')+' foto toe. Voor een echte tweede blik zijn twee beelden nodig.';return false}
 function drawLook(source){
  const palette=$('palette').value;
+ if(palette==='original'){ctx.save();ctx.filter='none';cover(ctx,source);ctx.restore();return}
  ctx.save();
  ctx.filter=palette==='amber'?'sepia(.63) saturate(.72) contrast(1.08) brightness(.88)':palette==='cocoa'?'sepia(.8) saturate(.56) contrast(1.16) brightness(.72)':'sepia(.52) saturate(.76) contrast(1.03) brightness(1.02)';
  cover(ctx,source);ctx.restore();
@@ -56,9 +57,11 @@ function render(t=0){
  drawLook(first);
  if(!compare&&eased>0){ctx.save();ctx.globalAlpha=eased;drawLook(second);ctx.restore()}
  if(!compare){
-  const vignette=ctx.createRadialGradient(W/2,H*.46,250,W/2,H*.46,1170);
-  vignette.addColorStop(0,'rgba(14,8,6,0)');vignette.addColorStop(1,'rgba(14,8,6,.33)');
-  ctx.fillStyle=vignette;ctx.fillRect(0,0,W,H);
+  if($('palette').value!=='original'){
+   const vignette=ctx.createRadialGradient(W/2,H*.46,250,W/2,H*.46,1170);
+   vignette.addColorStop(0,'rgba(14,8,6,0)');vignette.addColorStop(1,'rgba(14,8,6,.33)');
+   ctx.fillStyle=vignette;ctx.fillRect(0,0,W,H);
+  }
   if($('signature').checked){ctx.font='34px "DM Sans",sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(237,219,202,.75)';ctx.fillText('onder de ruis.',W/2,H-115)}
   // After the discovery, hold the finished image before introducing any words.
   const endingStart=Math.max(changeEnd+1, duration-(duration>=10?1.7:1.5));
