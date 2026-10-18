@@ -11,11 +11,12 @@
 <div class="group"><label for="palette">03 / ODR-kleurwereld</label><select id="palette"><option value="amber" selected>Warm amber · filmisch</option><option value="cocoa">Diep chocoladebruin</option><option value="soft">Zacht sepia</option></select></div>
 <div class="grid"><div class="group"><label for="duration">Duur</label><select id="duration"><option value="8">8 seconden</option><option value="12" selected>12 seconden</option><option value="15">15 seconden</option></select></div><div class="group"><label for="ending">Eindmoment</label><select id="ending"><option value="question" selected>Een vraag</option><option value="statement">Een gedachte</option><option value="none">Alleen het beeld</option></select></div></div>
 <div class="group"><label for="line">04 / Laatste gedachte</label><textarea id="line">kijk nog eens.</textarea><p class="hint">Een kleine uitnodiging om terug te kijken, geen uitleg van wat er veranderd is.</p></div>
-<div class="group"><label for="transition">05 / Overgang tussen beide blikken</label><select id="transition"><option value="gentle" selected>Geleidelijk · bijna ongemerkt</option><option value="clear">Duidelijker · bewust moment</option></select><p class="hint">De tweede foto vervangt de eerste, zonder zoom of lichtflits. De verandering zit in het beeld zelf.</p></div>
+<div class="group"><label for="transition">05 / Overgang tussen beide blikken</label><select id="transition"><option value="gentle" selected>Fluisterzacht · langzame overgang</option><option value="balanced">Vloeiend · iets korter</option><option value="clear">Duidelijk · bewust moment</option></select><p class="hint">De beelden vloeien met een zachte start en uitloop in elkaar over. Geen flits, zoom of plotselinge sprong.</p></div>
+<div class="group"><div class="rangeHead"><label for="scrub">Bekijk elk moment van de overgang</label><output id="scrubValue">0,0 s</output></div><input type="range" id="scrub" min="0" max="12" value="0" step="0.1"><p class="hint">Sleep om de overgang beeld voor beeld te beoordelen. De export gebruikt exact dezelfde overgang.</p></div>
 <label class="check"><input type="checkbox" id="signature" checked> Kleine ‘onder de ruis.’-signatuur</label>
 <div class="actions"><button id="play">▶ Bekijk de ervaring</button><button id="reset">↺ Begin opnieuw</button><button id="compare" type="button">◉ Houd vast: eerste blik</button><button class="primary" id="png">↓ Bewaar stilstaand beeld</button><button class="primary" id="mp4">↓ Maak Full HD MP4</button><button id="downloadMP4" disabled>↓ Download MP4</button><button id="video">↓ WebM (alternatief)</button></div>
 <p class="hint" id="status" role="status">Klaar voor je eerste ontdekking.</p>
-<p class="note">Prototype 5: twee versies van dezelfde scène. De eerste blik zet een verwachting neer; in de tweede blik verandert een echt detail. Dit werkt alleen wanneer je bewust twee beelden kiest die samen een betekenis hebben. Foto’s blijven op je apparaat. Full HD MP4 gebruikt een hogere doelbitrate (10 Mbps) voor zachte kleurverlopen. Bij stilstaande scènes kan de werkelijke bitrate lager uitvallen; de browser bepaalt de uiteindelijke compressie. Beschikbaar waar H.264-encoding wordt ondersteund.</p>
+<p class="note">Prototype 6: twee versies van dezelfde scène, met een langere filmische overvloeiing en een tijdlijn om de overgang te beoordelen. De eerste blik zet een verwachting neer; in de tweede blik verandert een echt detail. Dit werkt alleen wanneer je bewust twee beelden kiest die samen een betekenis hebben. Foto’s blijven op je apparaat. Full HD MP4 gebruikt een hogere doelbitrate (10 Mbps) voor zachte kleurverlopen. Bij stilstaande scènes kan de werkelijke bitrate lager uitvallen; de browser bepaalt de uiteindelijke compressie. Beschikbaar waar H.264-encoding wordt ondersteund.</p>
 </section></div></main>
 <script>
 (()=>{'use strict';const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d',{alpha:false}),W=1080,H=1920;let img=null,secondImg=null,raf=0,playing=false,start=0,elapsed=0,recording=false,compare=false;
@@ -42,9 +43,13 @@ function drawLook(source){
 function wrap(text,maxWidth){const words=text.trim().split(/\s+/),rows=[];let row='';for(const word of words){const t=row?row+' '+word:word;if(ctx.measureText(t).width>maxWidth&&row){rows.push(row);row=word}else row=t}if(row)rows.push(row);return rows.slice(0,5)}
 function render(t=0){
  const duration=Number($('duration').value),first=img||demo,second=secondImg||(img?img:demoSecond);
- const changeStart=duration*.48,fadeDuration=$('transition').value==='gentle'?duration*.24:.55;
+ // Hold the first scene, dissolve through a long continuous interval, then hold the second.
+ // Quintic smootherstep has zero velocity AND acceleration at both ends, avoiding a visible jolt.
+ const mode=$('transition').value;
+ const fadeDuration=mode==='gentle'?duration*.42:mode==='balanced'?duration*.29:duration*.14;
+ const changeStart=mode==='gentle'?duration*.30:mode==='balanced'?duration*.37:duration*.44;
  const blend=Math.max(0,Math.min(1,(t-changeStart)/fadeDuration));
- const eased=blend*blend*(3-2*blend);
+ const eased=blend*blend*blend*(blend*(blend*6-15)+10);
  ctx.fillStyle='#271911';ctx.fillRect(0,0,W,H);
  drawLook(first);
  if(!compare&&eased>0){ctx.save();ctx.globalAlpha=eased;drawLook(second);ctx.restore()}
@@ -64,10 +69,13 @@ function render(t=0){
   }
  }
  $('clock').textContent='00:'+String(Math.floor(t)).padStart(2,'0');
+ $('scrub').value=String(Math.max(0,Math.min(duration,t)));
+ $('scrubValue').textContent=t.toFixed(1).replace('.',',')+' s';
 }
 
 function frame(now){if(!playing)return;elapsed=Math.min(Number($('duration').value),(now-start)/1000);render(elapsed);if(elapsed<Number($('duration').value)){raf=requestAnimationFrame(frame)}else{playing=false;if(!recording)$('status').textContent='Einde. Wat zag je?'}}
 function play(){if(!requirePair())return;cancelAnimationFrame(raf);elapsed=0;playing=true;start=performance.now();raf=requestAnimationFrame(frame)}
+$('scrub').addEventListener('input',()=>{if(recording)return;cancelAnimationFrame(raf);playing=false;compare=false;elapsed=Number($('scrub').value);render(elapsed)});
 $('play').onclick=play;$('reset').onclick=()=>{cancelAnimationFrame(raf);playing=false;elapsed=0;render(0)};
 function loadImage(input,which){
  const file=input.files?.[0];if(!file)return;
@@ -83,7 +91,10 @@ function loadImage(input,which){
 }
 $('file').onchange=()=>loadImage($('file'),'first');
 $('secondFile').onchange=()=>loadImage($('secondFile'),'second');
-['duration','ending','line','signature','palette','transition'].forEach(id=>$(id).addEventListener('input',()=>{if(!playing)render(0)}));
+['duration','ending','line','signature','palette','transition'].forEach(id=>$(id).addEventListener('input',()=>{
+ if(id==='duration'){$('scrub').max=$('duration').value;elapsed=Math.min(elapsed,Number($('duration').value))}
+ if(!playing)render(elapsed);
+}));
 const compareBtn=$('compare');const setCompare=value=>{compare=value;if(!playing)render(0)};
 compareBtn.addEventListener('pointerdown',e=>{compareBtn.setPointerCapture(e.pointerId);setCompare(true)});
 compareBtn.addEventListener('pointerup',()=>setCompare(false));compareBtn.addEventListener('pointercancel',()=>setCompare(false));
