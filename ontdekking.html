@@ -9,7 +9,7 @@
 <div class="group"><label for="file">01 / Basisafbeelding</label><input type="file" id="file" accept="image/*"><p class="hint">Upload één beeld. Je maakt de tweede blik zelf door een bestaande lijn of staaf aan te lichten.</p></div>
 <div class="group accent"><label for="lightMode">02 / Tweede blik maken</label><select id="lightMode"><option value="accent" selected>Lichtaccent op dezelfde afbeelding (aanbevolen)</option><option value="pair">Twee eigen beelden (oude werkwijze)</option></select>
 <div id="accentTools"><p class="hint">Kies ‘Lichtlijnen tekenen’ en trek een <strong>rechte lijn of perfecte boog</strong> over een bestaande vorm. Vergroot het werkvlak met ⛶ en zoom in stappen van 10%. De compositie blijft gelijk.</p>
-<div class="tools"><button type="button" class="smallbtn" id="drawLine">✎ Lichtlijnen tekenen</button><button type="button" class="smallbtn" id="undoLine">↶ Laatste lijn terug</button><button type="button" class="smallbtn" id="clearLine">× Alles wissen</button></div><div class="group"><label for="strokeMode">Vorm van de lichtlijn</label><select id="strokeMode"><option value="straight" selected>Strakke rechte lijn</option><option value="arc">Strakke ronde boog</option></select><div class="rangeHead"><label for="arcBend">Buiging van de boog</label><output id="arcBendValue">35%</output></div><input id="arcBend" type="range" min="-100" max="100" value="35" step="1"><p class="hint">Sleep van beginpunt naar eindpunt. Rechte lijnen blijven wiskundig recht; bogen worden als gladde Bézier-curve getekend. Met Buiging pas je de laatst getekende boog aan. Meerdere lijnen zijn mogelijk. Zoom in stappen van 10% en vergroot het werkvlak voor precisie.</p></div>
+<div class="tools"><button type="button" class="smallbtn" id="drawLine">✎ Vorm tekenen</button><button type="button" class="smallbtn" id="editShape">↔ Vorm aanpassen</button><button type="button" class="smallbtn" id="undoLine">↶ Laatste lijn terug</button><button type="button" class="smallbtn" id="clearLine">× Alles wissen</button></div><div class="group"><label for="strokeMode">Vorm van de lichtlijn</label><select id="strokeMode"><option value="straight" selected>Rechte lijn</option><option value="lightbar">Lichtbalk</option><option value="arc">Gebogen lijn</option><option value="rect">Rechthoek</option><option value="roundrect">Afgeronde rechthoek</option><option value="ellipse">Ovaal</option><option value="circle">Cirkel</option><option value="semicircle">Halve cirkel</option><option value="triangle">Driehoek</option><option value="diamond">Ruit</option><option value="pentagon">Vijfhoek</option><option value="hexagon">Zeshoek</option><option value="octagon">Achthoek</option><option value="star">Ster</option></select><div class="rangeHead"><label for="barWidth">Breedte lichtbalk</label><output id="barWidthValue">40 px</output></div><input type="range" id="barWidth" min="4" max="200" value="40" step="2"><label class="check"><input type="checkbox" id="angleSnap"> Hoek vastzetten op stappen van 15°</label><p class="hint">Sleep van hoek naar hoek. De lichtbalk heeft een eigen breedte en een zacht lichtverloop. Met ‘Vorm aanpassen’ kun je eindpunten verschuiven of de vorm verplaatsen.</p><div class="rangeHead"><label for="arcBend">Buiging van de boog</label><output id="arcBendValue">35%</output></div><input id="arcBend" type="range" min="-100" max="100" value="35" step="1"><p class="hint">Sleep van beginpunt naar eindpunt. Rechte lijnen blijven wiskundig recht; bogen worden als gladde Bézier-curve getekend. Met Buiging pas je de laatst getekende boog aan. Meerdere lijnen zijn mogelijk. Zoom in stappen van 10% en vergroot het werkvlak voor precisie.</p></div>
 <div class="tools" id="presets"><button type="button" class="preset" data-preset="subtle">Subtiel</button><button type="button" class="preset" data-preset="warm">Warm</button><button type="button" class="preset" data-preset="intense">Intens</button></div>
 <div class="rangeHead"><label for="lightPower">Lichtsterkte</label><output id="lightPowerValue">75%</output></div><input id="lightPower" type="range" min="0" max="100" value="75">
 <div class="rangeHead"><label for="lightWarmth">Warmte</label><output id="lightWarmthValue">70%</output></div><input id="lightWarmth" type="range" min="0" max="100" value="70">
@@ -28,7 +28,7 @@
 <p class="note">De Ontdekking: één basisafbeelding met meerdere wiskundig strakke rechte of ronde lichtlijnen, zoomen per 10% en een vergrootbaar werkvlak en directe lichtregeling. Alleen het lichtaccent wordt toegevoegd; er worden geen vormen opnieuw gegenereerd. De oude modus met twee beelden blijft optioneel beschikbaar. Foto’s blijven op je apparaat. Full HD MP4 gebruikt een hogere doelbitrate (10 Mbps) voor zachte kleurverlopen. Bij stilstaande scènes kan de werkelijke bitrate lager uitvallen; de browser bepaalt de uiteindelijke compressie. Beschikbaar waar H.264-encoding wordt ondersteund.</p>
 </section></div></main>
 <script>
-(()=>{'use strict';const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d',{alpha:false}),W=1080,H=1920;let img=null,secondImg=null,raf=0,playing=false,start=0,elapsed=0,recording=false,compare=false,drawMode=false,drawing=false,lightStrokes=[],currentStroke=null,zoom=1;
+(()=>{'use strict';const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d',{alpha:false}),W=1080,H=1920;let img=null,secondImg=null,raf=0,playing=false,start=0,elapsed=0,recording=false,compare=false,drawMode=false,editMode=false,drawing=false,lightStrokes=[],currentStroke=null,zoom=1,selectedIndex=-1,editDrag=null;
 const demo=document.createElement('canvas');demo.width=W;demo.height=H;const d=demo.getContext('2d');d.fillStyle='#1d1512';d.fillRect(0,0,W,H);let grad=d.createLinearGradient(260,420,830,1550);grad.addColorStop(0,'#201713');grad.addColorStop(.5,'#5a4434');grad.addColorStop(1,'#251a15');d.fillStyle=grad;d.fillRect(280,420,520,1110);d.fillStyle='#17100e';d.fillRect(312,455,450,1040);let glow=d.createRadialGradient(530,1000,30,530,1000,470);glow.addColorStop(0,'#b08b64');glow.addColorStop(.3,'#6e5039');glow.addColorStop(1,'#201713');d.fillStyle=glow;d.fillRect(320,465,435,1020);d.fillStyle='#211711';d.beginPath();d.moveTo(520,455);d.lineTo(740,525);d.lineTo(740,1440);d.lineTo(520,1495);d.closePath();d.fill();d.fillStyle='#ad8c6d';d.beginPath();d.arc(706,995,9,0,Math.PI*2);d.fill();
 function cover(c,source){let sw=source.naturalWidth||source.width,sh=source.naturalHeight||source.height;const sc=Math.max(W/sw,H/sh),ww=sw*sc,hh=sh*sc;c.drawImage(source,(W-ww)/2,(H-hh)/2,ww,hh)}
 // The demo's second glance includes a real new element in the scene.
@@ -51,20 +51,47 @@ function drawLook(source){
  ctx.fillStyle=palette==='amber'?'rgba(43,23,15,.15)':palette==='cocoa'?'rgba(28,16,14,.24)':'rgba(57,37,27,.1)';
  ctx.fillRect(0,0,W,H);
 }
+function shapePath(stroke){
+ const p=stroke.points,a=p[0],b=p[1],x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(b.x-a.x),h=Math.abs(b.y-a.y),cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;
+ ctx.beginPath();
+ switch(stroke.mode){
+ case 'arc':{const dx=b.x-a.x,dy=b.y-a.y,k=(stroke.bend||0)/100;ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(cx-dy*k,cy+dx*k,b.x,b.y);break}
+ case 'rect':ctx.rect(x,y,w,h);break;
+ case 'roundrect':ctx.roundRect(x,y,w,h,Math.min(w,h)*.18);break;
+ case 'ellipse':ctx.ellipse(cx,cy,Math.max(.1,w/2),Math.max(.1,h/2),0,0,Math.PI*2);break;
+ case 'circle':ctx.arc(cx,cy,Math.max(.1,Math.max(w,h)/2),0,Math.PI*2);break;
+ case 'semicircle':ctx.ellipse(cx,cy+h/2,Math.max(.1,w/2),Math.max(.1,h),0,Math.PI,2*Math.PI);ctx.closePath();break;
+ case 'triangle':case 'diamond':case 'pentagon':case 'hexagon':case 'octagon':case 'star':{
+ const n={triangle:3,diamond:4,pentagon:5,hexagon:6,octagon:8,star:10}[stroke.mode];
+ for(let i=0;i<n;i++){const ang=-Math.PI/2+i*Math.PI*2/n,k=stroke.mode==='star'&&i%2?.45:1,px=cx+w/2*k*Math.cos(ang),py=cy+h/2*k*Math.sin(ang);if(i)ctx.lineTo(px,py);else ctx.moveTo(px,py)}ctx.closePath();break}
+ default:ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+ }
+}
 function drawAccent(alpha){
  if((!lightStrokes.length&&!currentStroke)||alpha<=0)return;
  const power=Number($('lightPower').value)/100,warmth=Number($('lightWarmth').value)/100,glow=Number($('lightGlow').value)/100;
  if(power<=0)return;
- const thickness=Number($('lightWidth').value);
- const color='rgb(255,'+Math.round(227-102*warmth)+','+Math.round(186-118*warmth)+')';
- function trace(stroke){const pts=stroke.points;if(pts.length<2)return;const a=pts[0],b=pts[1];ctx.beginPath();ctx.moveTo(a.x,a.y);if(stroke.mode==='arc'){const dx=b.x-a.x,dy=b.y-a.y,bend=(stroke.bend||0)/100;ctx.quadraticCurveTo((a.x+b.x)/2-dy*bend,(a.y+b.y)/2+dx*bend,b.x,b.y)}else ctx.lineTo(b.x,b.y)}
+ const thickness=Number($('lightWidth').value),color='rgb(255,'+Math.round(227-102*warmth)+','+Math.round(186-118*warmth)+')';
  ctx.save();ctx.globalCompositeOperation='screen';ctx.lineCap='round';ctx.lineJoin='round';
  for(const stroke of [...lightStrokes,...(currentStroke?[currentStroke]:[])]){
-  if(stroke.points.length<2)continue;
-  if(glow>0){ctx.save();ctx.globalAlpha=alpha*power*(.12+.34*glow);ctx.shadowColor=color;ctx.shadowBlur=8+glow*90;ctx.strokeStyle=color;ctx.lineWidth=thickness*(1.7+glow*2);trace(stroke);ctx.stroke();ctx.restore()}
-  ctx.globalAlpha=alpha*power;ctx.strokeStyle=color;ctx.lineWidth=thickness;trace(stroke);ctx.stroke();
+ if(stroke.points.length<2)continue;
+ if(stroke.mode==='lightbar'){
+ const [a,b]=stroke.points,dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy),width=stroke.barWidth||40;if(len<1)continue;
+ ctx.save();ctx.translate(a.x,a.y);ctx.rotate(Math.atan2(dy,dx));
+ if(glow>0){ctx.save();ctx.globalAlpha=alpha*power*(.25+.55*glow);ctx.shadowColor=color;ctx.shadowBlur=12+glow*120;ctx.fillStyle=color;ctx.fillRect(0,-width/2,len,width);ctx.restore()}
+ const g=ctx.createLinearGradient(0,-width/2,0,width/2);
+ g.addColorStop(0,'rgba(255,180,100,.12)');g.addColorStop(.18,'rgba(255,205,140,.70)');g.addColorStop(.5,'rgba(255,246,220,1)');g.addColorStop(.82,'rgba(255,205,140,.70)');g.addColorStop(1,'rgba(255,180,100,.12)');
+ ctx.globalAlpha=alpha*power;ctx.fillStyle=g;ctx.fillRect(0,-width/2,len,width);ctx.restore();continue;
+ }
+ if(glow>0){ctx.save();ctx.globalAlpha=alpha*power*(.12+.34*glow);ctx.shadowColor=color;ctx.shadowBlur=8+glow*90;ctx.strokeStyle=color;ctx.lineWidth=thickness*(1.7+glow*2);shapePath(stroke);ctx.stroke();ctx.restore()}
+ ctx.globalAlpha=alpha*power;ctx.strokeStyle=color;ctx.lineWidth=thickness;shapePath(stroke);ctx.stroke();
  }
  ctx.restore();
+}
+function drawEditHandles(){
+ if(!editMode||selectedIndex<0||!lightStrokes[selectedIndex]||recording)return;
+ ctx.save();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.fillStyle='#e5a55b';
+ for(const p of lightStrokes[selectedIndex].points){ctx.beginPath();ctx.arc(p.x,p.y,11,0,Math.PI*2);ctx.fill();ctx.stroke()}ctx.restore();
 }
 function wrap(text,maxWidth){const words=text.trim().split(/\s+/),rows=[];let row='';for(const word of words){const t=row?row+' '+word:word;if(ctx.measureText(t).width>maxWidth&&row){rows.push(row);row=word}else row=t}if(row)rows.push(row);return rows.slice(0,5)}
 function render(t=0){
@@ -109,6 +136,7 @@ function render(t=0){
    ctx.restore();
   }
  }
+ drawEditHandles();
  $('clock').textContent='00:'+String(Math.floor(t)).padStart(2,'0');
  $('scrub').value=String(Math.max(0,Math.min(duration,t)));
  $('scrubValue').textContent=t.toFixed(1).replace('.',',')+' s';
