@@ -19,7 +19,7 @@
 <div id="pairTools" hidden><label for="secondFile">Tweede afbeelding</label><input type="file" id="secondFile" accept="image/*"><p class="hint">Alleen voor bestaande beeldparen. Deze modus kan verschuivingen veroorzaken.</p></div></div>
 <div class="group"><label for="palette">03 / ODR-kleurwereld</label><select id="palette"><option value="original" selected>Originele kleuren · onbewerkt (aanbevolen)</option><option value="amber">Warm amber · filmisch</option><option value="cocoa">Diep chocoladebruin</option><option value="soft">Zacht sepia</option></select></div>
 <div class="grid"><div class="group"><label for="duration">Duur</label><select id="duration"><option value="8">8 seconden</option><option value="12" selected>12 seconden</option><option value="15">15 seconden</option></select></div><div class="group"><label for="ending">Eindmoment</label><select id="ending"><option value="question" selected>Een vraag</option><option value="statement">Een gedachte</option><option value="none">Alleen het beeld</option></select></div></div>
-<div class="group"><label for="line">04 / Laatste gedachte</label><textarea id="line">Wat je niet opmerkt, is niet per se afwezig.</textarea><p class="hint">De verandering is eerst volledig afgerond. Pas na een stille pauze verschijnt de gedachte in de laatste anderhalve à twee seconden, zonder tekstvlak.</p></div>
+<div class="group"><label for="line">04 / Laatste gedachte</label><textarea id="line">Kijk nog eens.</textarea><div class="rangeHead" style="margin-top:12px"><label for="textSize">Tekstgrootte</label><output id="textSizeValue">40 px</output></div><input type="range" id="textSize" min="24" max="96" step="2" value="40"><p class="hint">De verandering is eerst volledig afgerond. Pas na een stille pauze verschijnt de gedachte in de laatste anderhalve à twee seconden, zonder tekstvlak.</p></div>
 <div class="group"><label for="transition">05 / Overgang tussen beide blikken</label><select id="transition"><option value="gentle" selected>Fluisterzacht · langzame overgang</option><option value="balanced">Vloeiend · iets korter</option><option value="clear">Duidelijk · bewust moment</option></select><p class="hint">De beelden vloeien met een zachte start en uitloop in elkaar over. Geen flits, zoom of plotselinge sprong.</p></div>
 <div class="group"><div class="rangeHead"><label for="scrub">Bekijk elk moment van de overgang</label><output id="scrubValue">0,0 s</output></div><input type="range" id="scrub" min="0" max="12" value="0" step="0.1"><p class="hint">Sleep om de overgang beeld voor beeld te beoordelen. De export gebruikt exact dezelfde overgang.</p></div>
 <label class="check"><input type="checkbox" id="signature" checked> Kleine ‘onder de ruis.’-signatuur</label>
@@ -99,7 +99,7 @@ function render(t=0){
    ctx.fillStyle='#f1e4d8';
    ctx.textAlign='center';
    ctx.textBaseline='middle';
-   ctx.font='400 40px "DM Sans",sans-serif';
+   ctx.font='400 '+Number($('textSize').value)+'px "DM Sans",sans-serif';
    const rows=wrap($('line').value,800);
    const lineHeight=57,centerY=H*.79;
    // A restrained shadow improves legibility without covering the scene.
@@ -158,8 +158,9 @@ function loadImage(input,which){
 }
 $('file').onchange=()=>loadImage($('file'),'first');
 $('secondFile').onchange=()=>loadImage($('secondFile'),'second');
-['duration','ending','line','signature','palette','transition'].forEach(id=>$(id).addEventListener('input',()=>{
+['duration','ending','line','textSize','signature','palette','transition'].forEach(id=>$(id).addEventListener('input',()=>{
  if(id==='duration'){$('scrub').max=$('duration').value;elapsed=Math.min(elapsed,Number($('duration').value))}
+ if(id==='textSize')$('textSizeValue').textContent=$('textSize').value+' px';
  if(!playing)render(elapsed);
 }));
 const compareBtn=$('compare');const setCompare=value=>{compare=value;if(!playing)render(0)};
