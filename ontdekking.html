@@ -16,7 +16,7 @@
 <div class="rangeHead"><label for="lightGlow">Gloed rondom de lijn</label><output id="lightGlowValue">35%</output></div><input id="lightGlow" type="range" min="0" max="100" value="35">
 <div class="rangeHead"><label for="lightWidth">Lijndikte</label><output id="lightWidthValue">8 px</output></div><input id="lightWidth" type="range" min="1" max="40" value="8" step="1">
 <p class="hint">Lichtsterkte bepaalt hoe fel de lijn wordt; warmte bepaalt de kleur. Gloed en lijndikte regel je apart. Tijdens het aanpassen blijft de tweede blik zichtbaar.</p></div>
-<div id="swapTools" hidden><p class="hint">Plaats twee losse vormen op een vaste achtergrond. Gebruik basisvormen of transparante PNG's. Kies Plaats A of B en klik/versleep in het beeld.</p><div class="grid"><div><label>Vorm A</label><select id="swapShapeA"><option value="circle">Cirkel</option><option value="diamond">Ruit</option><option value="square">Vierkant</option><option value="triangle">Driehoek</option><option value="hexagon">Zeshoek</option><option value="star">Ster</option></select></div><div><label>Vorm B</label><select id="swapShapeB"><option value="diamond">Ruit</option><option value="circle">Cirkel</option><option value="square">Vierkant</option><option value="triangle">Driehoek</option><option value="hexagon">Zeshoek</option><option value="star">Ster</option></select></div><div><label>Kleur A</label><input type="color" id="swapColorA" value="#f1d0a4"></div><div><label>Kleur B</label><input type="color" id="swapColorB" value="#975e43"></div><div><label>Transparante PNG A (optioneel)</label><input type="file" id="swapFileA" accept="image/png,image/webp"></div><div><label>Transparante PNG B (optioneel)</label><input type="file" id="swapFileB" accept="image/png,image/webp"></div></div><div class="tools"><button type="button" id="placeA">Plaats A</button><button type="button" id="placeB">Plaats B</button><button type="button" id="clearSwapFiles">Basisvormen herstellen</button></div><label>Formaat <output id="swapSizeValue">110 px</output></label><input id="swapSize" type="range" min="20" max="400" value="110"><label>Start <output id="swapStartValue">3 s</output></label><input id="swapStart" type="range" min="0" max="10" step=".1" value="3"><label>Duur overgang <output id="swapLengthValue">4,7 s</output></label><input id="swapLength" type="range" min=".5" max="10" step=".1" value="4.7"><p class="hint">Gebruik een achtergrond waar de wisselende vormen nog niet in zijn verwerkt. Anders blijven de oorspronkelijke vormen zichtbaar.</p></div><div id="pairTools" hidden><label for="secondFile">Tweede afbeelding</label><input type="file" id="secondFile" accept="image/*"><p class="hint">Alleen voor bestaande beeldparen. Deze modus kan verschuivingen veroorzaken.</p></div></div>
+<div id="swapTools" hidden><p class="hint">Plaats twee losse vormen op een vaste achtergrond. Gebruik basisvormen of transparante PNG's. Kies Plaats A of B en klik/versleep in het beeld.</p><div class="grid"><div><label>Vorm A</label><select id="swapShapeA"><option value="circle">Cirkel</option><option value="diamond">Ruit</option><option value="square">Vierkant</option><option value="triangle">Driehoek</option><option value="hexagon">Zeshoek</option><option value="star">Ster</option></select></div><div><label>Vorm B</label><select id="swapShapeB"><option value="diamond">Ruit</option><option value="circle">Cirkel</option><option value="square">Vierkant</option><option value="triangle">Driehoek</option><option value="hexagon">Zeshoek</option><option value="star">Ster</option></select></div><div><label>Kleur A</label><input type="color" id="swapColorA" value="#f1d0a4"></div><div><label>Kleur B</label><input type="color" id="swapColorB" value="#975e43"></div><div><label>Transparante PNG A (optioneel)</label><input type="file" id="swapFileA" accept="image/png,image/webp"></div><div><label>Transparante PNG B (optioneel)</label><input type="file" id="swapFileB" accept="image/png,image/webp"></div></div><div class="tools"><button type="button" id="placeA">Plaats A</button><button type="button" id="placeB">Plaats B</button><button type="button" id="clearSwapFiles">Basisvormen herstellen</button></div><label for="swapAnimation">Animatie</label><select id="swapAnimation"><option value="fade">Zachte verwisseling · vormen vervagen</option><option value="move">Van positie wisselen · echte beweging</option></select><p class="hint">Bij echte beweging reizen A en B naar elkaars plek. Ze blijven volledig zichtbaar. De zachte verwisseling blijft beschikbaar.</p><label>Formaat <output id="swapSizeValue">110 px</output></label><input id="swapSize" type="range" min="20" max="400" value="110"><label>Start <output id="swapStartValue">3 s</output></label><input id="swapStart" type="range" min="0" max="10" step=".1" value="3"><label>Duur overgang <output id="swapLengthValue">4,7 s</output></label><input id="swapLength" type="range" min=".5" max="10" step=".1" value="4.7"><p class="hint">Gebruik een achtergrond waar de wisselende vormen nog niet in zijn verwerkt. Anders blijven de oorspronkelijke vormen zichtbaar.</p></div><div id="pairTools" hidden><label for="secondFile">Tweede afbeelding</label><input type="file" id="secondFile" accept="image/*"><p class="hint">Alleen voor bestaande beeldparen. Deze modus kan verschuivingen veroorzaken.</p></div></div>
 <div class="group"><label for="palette">03 / ODR-kleurwereld</label><select id="palette"><option value="original" selected>Originele kleuren · onbewerkt (aanbevolen)</option><option value="amber">Warm amber · filmisch</option><option value="cocoa">Diep chocoladebruin</option><option value="soft">Zacht sepia</option></select></div>
 <div class="grid"><div class="group"><label for="duration">Duur</label><select id="duration"><option value="8">8 seconden</option><option value="12" selected>12 seconden</option><option value="15">15 seconden</option></select></div><div class="group"><label for="ending">Eindmoment</label><select id="ending"><option value="question" selected>Een vraag</option><option value="statement">Een gedachte</option><option value="none">Alleen het beeld</option></select></div></div>
 <div class="group"><label for="line">04 / Laatste gedachte</label><textarea id="line">Kijk nog eens.</textarea><div class="rangeHead" style="margin-top:12px"><label for="textSize">Tekstgrootte</label><output id="textSizeValue">40 px</output></div><input type="range" id="textSize" min="24" max="96" step="2" value="40">
@@ -94,12 +94,8 @@ function drawAccent(alpha){
  }
  ctx.restore();
 }
-function drawSwap(t){
- const z=Math.max(0,Math.min(1,(t-Number($('swapStart').value))/Number($('swapLength').value))),v=z*z*z*(z*(z*6-15)+10),size=Number($('swapSize').value);
- for(let slot=0;slot<2;slot++)for(let pass=0;pass<2;pass++){
- const i=pass?1-slot:slot,a=pass?v:1-v;if(a<=0)continue;
- const p=swapPositions[slot],im=swapImages[i];
- ctx.save();ctx.globalAlpha=a;
+function drawSwapShape(i,p,size,alpha){
+ const im=swapImages[i];ctx.save();ctx.globalAlpha=alpha;
  if(im){const ratio=im.naturalWidth/im.naturalHeight,w=ratio>=1?size:size*ratio,h=ratio>=1?size/ratio:size;ctx.drawImage(im,p.x-w/2,p.y-h/2,w,h)}
  else{const kind=$(i?'swapShapeB':'swapShapeA').value,r=size/2;ctx.fillStyle=$(i?'swapColorB':'swapColorA').value;ctx.beginPath();
  if(kind==='circle')ctx.arc(p.x,p.y,r,0,Math.PI*2);
@@ -107,6 +103,22 @@ function drawSwap(t){
  else{const n={triangle:3,diamond:4,hexagon:6,star:10}[kind]||4;
  for(let k=0;k<n;k++){const ang=-Math.PI/2+2*Math.PI*k/n,rad=kind==='star'&&k%2?r*.45:r,x=p.x+rad*Math.cos(ang),y=p.y+rad*Math.sin(ang);if(k)ctx.lineTo(x,y);else ctx.moveTo(x,y)}ctx.closePath()}
  ctx.fill()}ctx.restore();
+}
+function drawSwap(t){
+ const z=Math.max(0,Math.min(1,(t-Number($('swapStart').value))/Number($('swapLength').value))),v=z*z*z*(z*(z*6-15)+10),size=Number($('swapSize').value);
+ if($('swapAnimation').value==='move'){
+  // Both objects physically exchange places, with a small mirrored curved offset
+  // so that they remain separately legible at the crossing.
+  for(let i=0;i<2;i++){
+   const from=swapPositions[i],to=swapPositions[1-i],arc=(i===0?1:-1)*Math.sin(Math.PI*v)*size*.4;
+   const dx=to.x-from.x,dy=to.y-from.y,dist=Math.hypot(dx,dy)||1;
+   const p={x:from.x+dx*v-dy/dist*arc,y:from.y+dy*v+dx/dist*arc};
+   drawSwapShape(i,p,size,1);
+  }
+ }else{
+  for(let slot=0;slot<2;slot++)for(let pass=0;pass<2;pass++){
+   const i=pass?1-slot:slot,a=pass?v:1-v;if(a>0)drawSwapShape(i,swapPositions[slot],size,a);
+  }
  }
  if(swapPlacing!==null&&!recording){const p=swapPositions[swapPlacing];ctx.save();ctx.strokeStyle='white';ctx.lineWidth=3;ctx.beginPath();ctx.arc(p.x,p.y,size*.6,0,Math.PI*2);ctx.stroke();ctx.restore()}
 }
@@ -203,7 +215,7 @@ cv.addEventListener('pointerdown',e=>{if(!swapMode()||swapPlacing===null||record
 cv.addEventListener('pointermove',e=>{if(swapDrag===null)return;e.preventDefault();swapPositions[swapDrag]=pointOnCanvas(e);render(0)});
 cv.addEventListener('pointerup',()=>{swapDrag=null;render(0)});
 cv.addEventListener('pointercancel',()=>{swapDrag=null});
-for(const id of ['swapShapeA','swapShapeB','swapColorA','swapColorB','swapSize','swapStart','swapLength'])$(id).addEventListener('input',()=>{$('swapSizeValue').textContent=$('swapSize').value+' px';$('swapStartValue').textContent=$('swapStart').value+' s';$('swapLengthValue').textContent=$('swapLength').value+' s';render(elapsed)});
+for(const id of ['swapShapeA','swapShapeB','swapColorA','swapColorB','swapSize','swapStart','swapLength','swapAnimation'])$(id).addEventListener('input',()=>{$('swapSizeValue').textContent=$('swapSize').value+' px';$('swapStartValue').textContent=$('swapStart').value+' s';$('swapLengthValue').textContent=$('swapLength').value+' s';render(elapsed)});
 for(let i=0;i<2;i++)$(i?'swapFileB':'swapFileA').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const url=URL.createObjectURL(f),im=new Image();im.onload=()=>{swapImages[i]=im;URL.revokeObjectURL(url);render(elapsed)};im.src=url});
 $('clearSwapFiles').onclick=()=>{swapImages=[null,null];$('swapFileA').value='';$('swapFileB').value='';render(elapsed)};
 const presets={subtle:[32,45,18,4],warm:[75,70,35,8],intense:[100,92,75,16]};
