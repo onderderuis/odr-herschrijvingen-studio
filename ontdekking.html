@@ -7,7 +7,7 @@
 <div class="layout"><div class="preview" id="editorPreview"><div class="zoomBar"><button id="zoomOut" type="button" aria-label="Uitzoomen">−</button><span id="zoomLabel">100%</span><button id="zoomIn" type="button" aria-label="Inzoomen">+</button><button id="zoomReset" type="button">Passend</button><button id="expandEditor" type="button">⛶ Groot werkvlak</button></div><div class="canvasViewport" id="canvasViewport"><canvas id="cv" width="1080" height="1920" aria-label="Verticale voorbeeldvideo van het verborgen beeld"></canvas></div><div class="meta"><span>VERTICAAL · 1080 × 1920</span><span id="clock">00:00</span></div><p class="hint">Bekijk de hele scène. In de tweede helft verschijnt een ander detail. Wat zag je de eerste keer niet?</p></div>
 <section class="panel">
 <div class="group"><label for="file">01 / Basisafbeelding</label><input type="file" id="file" accept="image/*"><p class="hint">Upload één beeld. Je maakt de tweede blik zelf door een bestaande lijn of staaf aan te lichten.</p></div>
-<div class="group accent"><label for="lightMode">02 / Tweede blik maken</label><select id="lightMode"><option value="accent" selected>Lichtaccent op dezelfde afbeelding (aanbevolen)</option><option value="pair">Twee eigen beelden (oude werkwijze)</option></select>
+<div class="group accent"><label for="lightMode">02 / Tweede blik maken</label><select id="lightMode"><option value="accent" selected>Lichtaccent op dezelfde afbeelding (aanbevolen)</option><option value="swap">Verwisseling · twee vormen</option><option value="pair">Twee eigen beelden (oude werkwijze)</option></select>
 <div id="accentTools"><p class="hint">Kies ‘Lichtlijnen tekenen’ en trek een <strong>rechte lijn of perfecte boog</strong> over een bestaande vorm. Vergroot het werkvlak met ⛶ en zoom in stappen van 10%. De compositie blijft gelijk.</p>
 <div class="tools"><button type="button" class="smallbtn" id="drawLine">✎ Vorm tekenen</button><button type="button" class="smallbtn" id="editShape">↔ Vorm aanpassen</button><button type="button" class="smallbtn" id="undoLine">↶ Laatste lijn terug</button><button type="button" class="smallbtn" id="clearLine">× Alles wissen</button></div><div class="group"><label for="strokeMode">Vorm van de lichtlijn</label><select id="strokeMode"><option value="straight" selected>Rechte lijn</option><option value="lightbar">Lichtbalk</option><option value="arc">Gebogen lijn</option><option value="rect">Rechthoek</option><option value="roundrect">Afgeronde rechthoek</option><option value="ellipse">Ovaal</option><option value="circle">Cirkel</option><option value="semicircle">Halve cirkel</option><option value="triangle">Driehoek</option><option value="diamond">Ruit</option><option value="pentagon">Vijfhoek</option><option value="hexagon">Zeshoek</option><option value="octagon">Achthoek</option><option value="star">Ster</option></select><div class="rangeHead"><label for="barWidth">Breedte lichtbalk</label><output id="barWidthValue">40 px</output></div><input type="range" id="barWidth" min="4" max="200" value="40" step="2"><label class="check"><input type="checkbox" id="angleSnap"> Hoek vastzetten op stappen van 15°</label><p class="hint">Sleep van hoek naar hoek. De lichtbalk heeft een eigen breedte en een zacht lichtverloop. Met ‘Vorm aanpassen’ kun je eindpunten verschuiven of de vorm verplaatsen.</p><div class="rangeHead"><label for="arcBend">Buiging van de boog</label><output id="arcBendValue">35%</output></div><input id="arcBend" type="range" min="-100" max="100" value="35" step="1"><p class="hint">Sleep van beginpunt naar eindpunt. Rechte lijnen blijven wiskundig recht; bogen worden als gladde Bézier-curve getekend. Met Buiging pas je de laatst getekende boog aan. Meerdere lijnen zijn mogelijk. Zoom in stappen van 10% en vergroot het werkvlak voor precisie.</p></div>
 <div class="tools" id="presets"><button type="button" class="preset" data-preset="subtle">Subtiel</button><button type="button" class="preset" data-preset="warm">Warm</button><button type="button" class="preset" data-preset="intense">Intens</button></div>
@@ -16,7 +16,7 @@
 <div class="rangeHead"><label for="lightGlow">Gloed rondom de lijn</label><output id="lightGlowValue">35%</output></div><input id="lightGlow" type="range" min="0" max="100" value="35">
 <div class="rangeHead"><label for="lightWidth">Lijndikte</label><output id="lightWidthValue">8 px</output></div><input id="lightWidth" type="range" min="1" max="40" value="8" step="1">
 <p class="hint">Lichtsterkte bepaalt hoe fel de lijn wordt; warmte bepaalt de kleur. Gloed en lijndikte regel je apart. Tijdens het aanpassen blijft de tweede blik zichtbaar.</p></div>
-<div id="pairTools" hidden><label for="secondFile">Tweede afbeelding</label><input type="file" id="secondFile" accept="image/*"><p class="hint">Alleen voor bestaande beeldparen. Deze modus kan verschuivingen veroorzaken.</p></div></div>
+<div id="swapTools" hidden><p class="hint">Plaats twee losse vormen op een vaste achtergrond. Gebruik basisvormen of transparante PNG's. Kies Plaats A of B en klik/versleep in het beeld.</p><div class="grid"><div><label>Vorm A</label><select id="swapShapeA"><option value="circle">Cirkel</option><option value="diamond">Ruit</option><option value="square">Vierkant</option><option value="triangle">Driehoek</option><option value="hexagon">Zeshoek</option><option value="star">Ster</option></select></div><div><label>Vorm B</label><select id="swapShapeB"><option value="diamond">Ruit</option><option value="circle">Cirkel</option><option value="square">Vierkant</option><option value="triangle">Driehoek</option><option value="hexagon">Zeshoek</option><option value="star">Ster</option></select></div><div><label>Kleur A</label><input type="color" id="swapColorA" value="#f1d0a4"></div><div><label>Kleur B</label><input type="color" id="swapColorB" value="#975e43"></div><div><label>Transparante PNG A (optioneel)</label><input type="file" id="swapFileA" accept="image/png,image/webp"></div><div><label>Transparante PNG B (optioneel)</label><input type="file" id="swapFileB" accept="image/png,image/webp"></div></div><div class="tools"><button type="button" id="placeA">Plaats A</button><button type="button" id="placeB">Plaats B</button><button type="button" id="clearSwapFiles">Basisvormen herstellen</button></div><label>Formaat <output id="swapSizeValue">110 px</output></label><input id="swapSize" type="range" min="20" max="400" value="110"><label>Start <output id="swapStartValue">3 s</output></label><input id="swapStart" type="range" min="0" max="10" step=".1" value="3"><label>Duur overgang <output id="swapLengthValue">4,7 s</output></label><input id="swapLength" type="range" min=".5" max="10" step=".1" value="4.7"><p class="hint">Gebruik een achtergrond waar de wisselende vormen nog niet in zijn verwerkt. Anders blijven de oorspronkelijke vormen zichtbaar.</p></div><div id="pairTools" hidden><label for="secondFile">Tweede afbeelding</label><input type="file" id="secondFile" accept="image/*"><p class="hint">Alleen voor bestaande beeldparen. Deze modus kan verschuivingen veroorzaken.</p></div></div>
 <div class="group"><label for="palette">03 / ODR-kleurwereld</label><select id="palette"><option value="original" selected>Originele kleuren · onbewerkt (aanbevolen)</option><option value="amber">Warm amber · filmisch</option><option value="cocoa">Diep chocoladebruin</option><option value="soft">Zacht sepia</option></select></div>
 <div class="grid"><div class="group"><label for="duration">Duur</label><select id="duration"><option value="8">8 seconden</option><option value="12" selected>12 seconden</option><option value="15">15 seconden</option></select></div><div class="group"><label for="ending">Eindmoment</label><select id="ending"><option value="question" selected>Een vraag</option><option value="statement">Een gedachte</option><option value="none">Alleen het beeld</option></select></div></div>
 <div class="group"><label for="line">04 / Laatste gedachte</label><textarea id="line">Kijk nog eens.</textarea><div class="rangeHead" style="margin-top:12px"><label for="textSize">Tekstgrootte</label><output id="textSizeValue">40 px</output></div><input type="range" id="textSize" min="24" max="96" step="2" value="40"><p class="hint">De verandering is eerst volledig afgerond. Pas na een stille pauze verschijnt de gedachte in de laatste anderhalve à twee seconden, zonder tekstvlak.</p></div>
@@ -25,10 +25,10 @@
 <label class="check"><input type="checkbox" id="signature" checked> Kleine ‘onder de ruis.’-signatuur</label>
 <div class="actions"><button id="play">▶ Bekijk de ervaring</button><button id="reset">↺ Begin opnieuw</button><button id="compare" type="button">◉ Houd vast: eerste blik</button><button class="primary" id="png">↓ Bewaar eerste blik</button><button id="pngSecond">↓ Bewaar tweede blik</button><button class="primary" id="mp4">↓ Maak Full HD MP4</button><button id="downloadMP4" disabled>↓ Download MP4</button><button id="video">↓ WebM (alternatief)</button></div>
 <p class="hint" id="status" role="status">Klaar voor je eerste ontdekking.</p>
-<p class="note">De Ontdekking: één basisafbeelding met meerdere wiskundig strakke rechte of ronde lichtlijnen, zoomen per 10% en een vergrootbaar werkvlak en directe lichtregeling. Alleen het lichtaccent wordt toegevoegd; er worden geen vormen opnieuw gegenereerd. De oude modus met twee beelden blijft optioneel beschikbaar. Foto’s blijven op je apparaat. Full HD MP4 gebruikt een hogere doelbitrate (10 Mbps) voor zachte kleurverlopen. Bij stilstaande scènes kan de werkelijke bitrate lager uitvallen; de browser bepaalt de uiteindelijke compressie. Beschikbaar waar H.264-encoding wordt ondersteund.</p>
+<p class="note">De Ontdekking: één basisafbeelding met meerdere wiskundig strakke rechte of ronde lichtlijnen, zoomen per 10% en een vergrootbaar werkvlak en directe lichtregeling. In de Verwisseling blijven de achtergrond en alle andere vormen intact. De oude modus met twee beelden blijft optioneel beschikbaar. Foto’s blijven op je apparaat. Full HD MP4 gebruikt een hogere doelbitrate (10 Mbps) voor zachte kleurverlopen. Bij stilstaande scènes kan de werkelijke bitrate lager uitvallen; de browser bepaalt de uiteindelijke compressie. Beschikbaar waar H.264-encoding wordt ondersteund.</p>
 </section></div></main>
 <script>
-(()=>{'use strict';const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d',{alpha:false}),W=1080,H=1920;let img=null,secondImg=null,raf=0,playing=false,start=0,elapsed=0,recording=false,compare=false,drawMode=false,editMode=false,drawing=false,lightStrokes=[],currentStroke=null,zoom=1,selectedIndex=-1,editDrag=null;
+(()=>{'use strict';const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d',{alpha:false}),W=1080,H=1920;let img=null,secondImg=null,raf=0,playing=false,start=0,elapsed=0,recording=false,compare=false,drawMode=false,editMode=false,drawing=false,lightStrokes=[],currentStroke=null,zoom=1,selectedIndex=-1,editDrag=null,swapPlacing=null,swapDrag=null,swapImages=[null,null];const swapPositions=[{x:350,y:570},{x:760,y:1050}];
 const demo=document.createElement('canvas');demo.width=W;demo.height=H;const d=demo.getContext('2d');d.fillStyle='#1d1512';d.fillRect(0,0,W,H);let grad=d.createLinearGradient(260,420,830,1550);grad.addColorStop(0,'#201713');grad.addColorStop(.5,'#5a4434');grad.addColorStop(1,'#251a15');d.fillStyle=grad;d.fillRect(280,420,520,1110);d.fillStyle='#17100e';d.fillRect(312,455,450,1040);let glow=d.createRadialGradient(530,1000,30,530,1000,470);glow.addColorStop(0,'#b08b64');glow.addColorStop(.3,'#6e5039');glow.addColorStop(1,'#201713');d.fillStyle=glow;d.fillRect(320,465,435,1020);d.fillStyle='#211711';d.beginPath();d.moveTo(520,455);d.lineTo(740,525);d.lineTo(740,1440);d.lineTo(520,1495);d.closePath();d.fill();d.fillStyle='#ad8c6d';d.beginPath();d.arc(706,995,9,0,Math.PI*2);d.fill();
 function cover(c,source){let sw=source.naturalWidth||source.width,sh=source.naturalHeight||source.height;const sc=Math.max(W/sw,H/sh),ww=sw*sc,hh=sh*sc;c.drawImage(source,(W-ww)/2,(H-hh)/2,ww,hh)}
 // The demo's second glance includes a real new element in the scene.
@@ -40,7 +40,8 @@ ds.fillStyle='#d6bda0';ds.fillRect(0,0,185,128);
 ds.fillStyle='#9d7658';ds.fillRect(18,23,148,3);ds.fillRect(18,44,119,3);
 ds.fillStyle='#7c5441';ds.fillRect(18,84,62,4);ds.restore();
 function accentMode(){return $('lightMode').value==='accent'}
-function secondReady(){return accentMode()?lightStrokes.length>0:(!img&&!secondImg)||!!(img&&secondImg)}
+function swapMode(){return $('lightMode').value==='swap'}
+function secondReady(){return swapMode()?true:accentMode()?lightStrokes.length>0:(!img&&!secondImg)||!!(img&&secondImg)}
 function requirePair(){if(secondReady())return true;$('status').textContent=accentMode()?'Teken eerst een lichtlijn over de afbeelding.':'Voeg ook het ontbrekende beeld toe.';return false}
 function drawLook(source){
  const palette=$('palette').value;
@@ -88,6 +89,22 @@ function drawAccent(alpha){
  }
  ctx.restore();
 }
+function drawSwap(t){
+ const z=Math.max(0,Math.min(1,(t-Number($('swapStart').value))/Number($('swapLength').value))),v=z*z*z*(z*(z*6-15)+10),size=Number($('swapSize').value);
+ for(let slot=0;slot<2;slot++)for(let pass=0;pass<2;pass++){
+ const i=pass?1-slot:slot,a=pass?v:1-v;if(a<=0)continue;
+ const p=swapPositions[slot],im=swapImages[i];
+ ctx.save();ctx.globalAlpha=a;
+ if(im){const ratio=im.naturalWidth/im.naturalHeight,w=ratio>=1?size:size*ratio,h=ratio>=1?size/ratio:size;ctx.drawImage(im,p.x-w/2,p.y-h/2,w,h)}
+ else{const kind=$(i?'swapShapeB':'swapShapeA').value,r=size/2;ctx.fillStyle=$(i?'swapColorB':'swapColorA').value;ctx.beginPath();
+ if(kind==='circle')ctx.arc(p.x,p.y,r,0,Math.PI*2);
+ else if(kind==='square')ctx.rect(p.x-r,p.y-r,size,size);
+ else{const n={triangle:3,diamond:4,hexagon:6,star:10}[kind]||4;
+ for(let k=0;k<n;k++){const ang=-Math.PI/2+2*Math.PI*k/n,rad=kind==='star'&&k%2?r*.45:r,x=p.x+rad*Math.cos(ang),y=p.y+rad*Math.sin(ang);if(k)ctx.lineTo(x,y);else ctx.moveTo(x,y)}ctx.closePath()}
+ ctx.fill()}ctx.restore();
+ }
+ if(swapPlacing!==null&&!recording){const p=swapPositions[swapPlacing];ctx.save();ctx.strokeStyle='white';ctx.lineWidth=3;ctx.beginPath();ctx.arc(p.x,p.y,size*.6,0,Math.PI*2);ctx.stroke();ctx.restore()}
+}
 function drawEditHandles(){
  if(!editMode||selectedIndex<0||!lightStrokes[selectedIndex]||recording)return;
  ctx.save();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.fillStyle='#e5a55b';
@@ -107,7 +124,8 @@ function render(t=0){
  const eased=blend*blend*blend*(blend*(blend*6-15)+10);
  ctx.fillStyle='#271911';ctx.fillRect(0,0,W,H);
  drawLook(first);
- if(!compare&&eased>0){if(accentMode())drawAccent(eased);else{ctx.save();ctx.globalAlpha=eased;drawLook(second);ctx.restore()}}
+ if(swapMode()&&!compare)drawSwap(t);
+ if(!swapMode()&&!compare&&eased>0){if(accentMode())drawAccent(eased);else{ctx.save();ctx.globalAlpha=eased;drawLook(second);ctx.restore()}}
  if(!compare){
   if($('palette').value!=='original'){
    const vignette=ctx.createRadialGradient(W/2,H*.46,250,W/2,H*.46,1170);
@@ -167,7 +185,16 @@ $('zoomOut').onclick=()=>setZoom(zoom-.1);
 $('zoomReset').onclick=()=>setZoom(1);
 $('expandEditor').onclick=()=>{const expanded=$('editorPreview').classList.toggle('expanded');document.body.classList.toggle('editorExpanded',expanded);$('expandEditor').textContent=expanded?'↙ Sluit groot werkvlak':'⛶ Groot werkvlak';if(expanded)viewport.scrollTop=0};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('editorPreview').classList.contains('expanded'))$('expandEditor').click()});
-$('lightMode').addEventListener('change',()=>{$('accentTools').hidden=!accentMode();$('pairTools').hidden=accentMode();setDrawMode(false);render(elapsed)});
+$('lightMode').addEventListener('change',()=>{$('accentTools').hidden=!accentMode();$('swapTools').hidden=!swapMode();$('pairTools').hidden=accentMode()||swapMode();setDrawMode(false);swapPlacing=null;render(elapsed)});
+$('placeA').onclick=()=>{swapPlacing=0;render(0)};
+$('placeB').onclick=()=>{swapPlacing=1;render(0)};
+cv.addEventListener('pointerdown',e=>{if(!swapMode()||swapPlacing===null||recording)return;e.preventDefault();cv.setPointerCapture(e.pointerId);swapDrag=swapPlacing;swapPositions[swapDrag]=pointOnCanvas(e);render(0)});
+cv.addEventListener('pointermove',e=>{if(swapDrag===null)return;e.preventDefault();swapPositions[swapDrag]=pointOnCanvas(e);render(0)});
+cv.addEventListener('pointerup',()=>{swapDrag=null;render(0)});
+cv.addEventListener('pointercancel',()=>{swapDrag=null});
+for(const id of ['swapShapeA','swapShapeB','swapColorA','swapColorB','swapSize','swapStart','swapLength'])$(id).addEventListener('input',()=>{$('swapSizeValue').textContent=$('swapSize').value+' px';$('swapStartValue').textContent=$('swapStart').value+' s';$('swapLengthValue').textContent=$('swapLength').value+' s';render(elapsed)});
+for(let i=0;i<2;i++)$(i?'swapFileB':'swapFileA').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const url=URL.createObjectURL(f),im=new Image();im.onload=()=>{swapImages[i]=im;URL.revokeObjectURL(url);render(elapsed)};im.src=url});
+$('clearSwapFiles').onclick=()=>{swapImages=[null,null];$('swapFileA').value='';$('swapFileB').value='';render(elapsed)};
 const presets={subtle:[32,45,18,4],warm:[75,70,35,8],intense:[100,92,75,16]};
 function updateSliders(){for(const id of ['lightPower','lightWarmth','lightGlow'])$(id+'Value').textContent=$(id).value+'%';$('lightWidthValue').textContent=$('lightWidth').value+' px';if(playing){cancelAnimationFrame(raf);playing=false}previewAccent()}
 for(const id of ['lightPower','lightWarmth','lightGlow','lightWidth'])$(id).addEventListener('input',()=>{document.querySelectorAll('.preset').forEach(b=>b.classList.remove('active'));updateSliders()});
