@@ -19,7 +19,12 @@
 <div id="swapTools" hidden><p class="hint">Plaats twee losse vormen op een vaste achtergrond. Gebruik basisvormen of transparante PNG's. Kies Plaats A of B en klik/versleep in het beeld.</p><div class="grid"><div><label>Vorm A</label><select id="swapShapeA"><option value="circle">Cirkel</option><option value="diamond">Ruit</option><option value="square">Vierkant</option><option value="triangle">Driehoek</option><option value="hexagon">Zeshoek</option><option value="star">Ster</option></select></div><div><label>Vorm B</label><select id="swapShapeB"><option value="diamond">Ruit</option><option value="circle">Cirkel</option><option value="square">Vierkant</option><option value="triangle">Driehoek</option><option value="hexagon">Zeshoek</option><option value="star">Ster</option></select></div><div><label>Kleur A</label><input type="color" id="swapColorA" value="#f1d0a4"></div><div><label>Kleur B</label><input type="color" id="swapColorB" value="#975e43"></div><div><label>Transparante PNG A (optioneel)</label><input type="file" id="swapFileA" accept="image/png,image/webp"></div><div><label>Transparante PNG B (optioneel)</label><input type="file" id="swapFileB" accept="image/png,image/webp"></div></div><div class="tools"><button type="button" id="placeA">Plaats A</button><button type="button" id="placeB">Plaats B</button><button type="button" id="clearSwapFiles">Basisvormen herstellen</button></div><label>Formaat <output id="swapSizeValue">110 px</output></label><input id="swapSize" type="range" min="20" max="400" value="110"><label>Start <output id="swapStartValue">3 s</output></label><input id="swapStart" type="range" min="0" max="10" step=".1" value="3"><label>Duur overgang <output id="swapLengthValue">4,7 s</output></label><input id="swapLength" type="range" min=".5" max="10" step=".1" value="4.7"><p class="hint">Gebruik een achtergrond waar de wisselende vormen nog niet in zijn verwerkt. Anders blijven de oorspronkelijke vormen zichtbaar.</p></div><div id="pairTools" hidden><label for="secondFile">Tweede afbeelding</label><input type="file" id="secondFile" accept="image/*"><p class="hint">Alleen voor bestaande beeldparen. Deze modus kan verschuivingen veroorzaken.</p></div></div>
 <div class="group"><label for="palette">03 / ODR-kleurwereld</label><select id="palette"><option value="original" selected>Originele kleuren · onbewerkt (aanbevolen)</option><option value="amber">Warm amber · filmisch</option><option value="cocoa">Diep chocoladebruin</option><option value="soft">Zacht sepia</option></select></div>
 <div class="grid"><div class="group"><label for="duration">Duur</label><select id="duration"><option value="8">8 seconden</option><option value="12" selected>12 seconden</option><option value="15">15 seconden</option></select></div><div class="group"><label for="ending">Eindmoment</label><select id="ending"><option value="question" selected>Een vraag</option><option value="statement">Een gedachte</option><option value="none">Alleen het beeld</option></select></div></div>
-<div class="group"><label for="line">04 / Laatste gedachte</label><textarea id="line">Kijk nog eens.</textarea><div class="rangeHead" style="margin-top:12px"><label for="textSize">Tekstgrootte</label><output id="textSizeValue">40 px</output></div><input type="range" id="textSize" min="24" max="96" step="2" value="40"><p class="hint">De verandering is eerst volledig afgerond. Pas na een stille pauze verschijnt de gedachte in de laatste anderhalve à twee seconden, zonder tekstvlak.</p></div>
+<div class="group"><label for="line">04 / Laatste gedachte</label><textarea id="line">Kijk nog eens.</textarea><div class="rangeHead" style="margin-top:12px"><label for="textSize">Tekstgrootte</label><output id="textSizeValue">40 px</output></div><input type="range" id="textSize" min="24" max="96" step="2" value="40">
+<div class="rangeHead"><label for="textPositionX">Horizontale positie</label><output id="textPositionXValue">Midden</output></div><input type="range" id="textPositionX" min="10" max="90" step="1" value="50">
+<div class="rangeHead"><label for="textPositionY">Verticale positie</label><output id="textPositionYValue">79%</output></div><input type="range" id="textPositionY" min="10" max="94" step="1" value="79">
+<div class="grid"><div class="group"><label for="textColor">Tekstkleur</label><input type="color" id="textColor" value="#f1e4d8" style="width:100%;height:42px"></div><div class="group"><label for="textShadow">Schaduw</label><select id="textShadow"><option value="soft" selected>Subtiel</option><option value="strong">Sterk</option><option value="none">Geen</option></select></div></div>
+<button type="button" id="previewEnding" class="smallbtn">Bekijk tekstpositie</button>
+<p class="hint">De positie is instelbaar. Zet de tekst bij drukke illustraties bij voorkeur op een rustig donker vlak.</p><p class="hint">De verandering is eerst volledig afgerond. Pas na een stille pauze verschijnt de gedachte in de laatste anderhalve à twee seconden, zonder tekstvlak.</p></div>
 <div class="group"><label for="transition">05 / Overgang tussen beide blikken</label><select id="transition"><option value="gentle" selected>Fluisterzacht · langzame overgang</option><option value="balanced">Vloeiend · iets korter</option><option value="clear">Duidelijk · bewust moment</option></select><p class="hint">De beelden vloeien met een zachte start en uitloop in elkaar over. Geen flits, zoom of plotselinge sprong.</p></div>
 <div class="group"><div class="rangeHead"><label for="scrub">Bekijk elk moment van de overgang</label><output id="scrubValue">0,0 s</output></div><input type="range" id="scrub" min="0" max="12" value="0" step="0.1"><p class="hint">Sleep om de overgang beeld voor beeld te beoordelen. De export gebruikt exact dezelfde overgang.</p></div>
 <label class="check"><input type="checkbox" id="signature" checked> Kleine ‘onder de ruis.’-signatuur</label>
@@ -141,16 +146,16 @@ function render(t=0){
    const alpha=p*p*(3-2*p);
    ctx.save();
    ctx.globalAlpha=alpha*.92;
-   ctx.fillStyle='#f1e4d8';
+   ctx.fillStyle=$('textColor').value;
    ctx.textAlign='center';
    ctx.textBaseline='middle';
    ctx.font='400 '+Number($('textSize').value)+'px "DM Sans",sans-serif';
    const rows=wrap($('line').value,800);
-   const lineHeight=57,centerY=H*.79;
+   const lineHeight=Number($('textSize').value)*1.42,centerY=H*Number($('textPositionY').value)/100,centerX=W*Number($('textPositionX').value)/100;
    // A restrained shadow improves legibility without covering the scene.
-   ctx.shadowColor='rgba(18,11,8,.60)';
-   ctx.shadowBlur=14;
-   rows.forEach((row,i)=>ctx.fillText(row,W/2,centerY+(i-(rows.length-1)/2)*lineHeight));
+   ctx.shadowColor=$('textShadow').value==='strong'?'rgba(18,11,8,.95)':'rgba(18,11,8,.60)';
+   ctx.shadowBlur=$('textShadow').value==='none'?0:$('textShadow').value==='strong'?28:14;
+   rows.forEach((row,i)=>ctx.fillText(row,centerX,centerY+(i-(rows.length-1)/2)*lineHeight));
    ctx.restore();
   }
  }
@@ -165,6 +170,12 @@ function play(){if(!requirePair())return;cancelAnimationFrame(raf);elapsed=0;pla
 $('scrub').addEventListener('input',()=>{if(recording)return;cancelAnimationFrame(raf);playing=false;compare=false;elapsed=Number($('scrub').value);render(elapsed)});
 $('play').onclick=play;$('reset').onclick=()=>{cancelAnimationFrame(raf);playing=false;elapsed=0;render(0)};
 function previewAccent(){if(recording||playing)return;elapsed=Number($('duration').value)*.65;render(elapsed)}
+for(const id of ['textPositionX','textPositionY','textColor','textShadow'])$(id).addEventListener('input',()=>{
+ $('textPositionXValue').textContent=Number($('textPositionX').value)===50?'Midden':$('textPositionX').value+'%';
+ $('textPositionYValue').textContent=$('textPositionY').value+'%';
+ if(!recording){cancelAnimationFrame(raf);playing=false;elapsed=Number($('duration').value);render(elapsed)}
+});
+$('previewEnding').onclick=()=>{cancelAnimationFrame(raf);playing=false;elapsed=Number($('duration').value);render(elapsed)};
 function pointOnCanvas(e){const r=cv.getBoundingClientRect();return{x:Math.max(0,Math.min(W,(e.clientX-r.left)/r.width*W)),y:Math.max(0,Math.min(H,(e.clientY-r.top)/r.height*H))}}
 function setDrawMode(on){drawMode=on;cv.classList.toggle('selecting',on);$('drawLine').textContent=on?'✓ Klaar met tekenen':'✎ Lichtlijnen tekenen';$('status').textContent=on?'Sleep over een bestaande lijn: recht of een perfecte boog.':'Lichtlijnen bewaard. Pas het licht aan.';if(on){cancelAnimationFrame(raf);playing=false;previewAccent()}}
 $('drawLine').onclick=()=>setDrawMode(!drawMode);
