@@ -12,28 +12,34 @@ const lines=Array.from({length:8},(_,i)=>linePath(i+1));
 function drawWirwar(i,p,n){ctx.save();ctx.lineWidth=3.1;ctx.lineCap='round';ctx.lineJoin='round';const focus=Math.floor(i/Math.max(1,n-1)*5);
 lines.forEach((pts,k)=>{let highlighted=k===2||k===5;ctx.strokeStyle=highlighted?p.ink:p.sub;ctx.globalAlpha=highlighted?.25+(.72*i/Math.max(1,n-1)):.46-.36*i/Math.max(1,n-1);ctx.beginPath();pts.forEach(([x,y],j)=>j?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke()});ctx.restore()}
 function drawPunt(i,p,n){
- const phase=i/Math.max(1,n-1),stage=Math.min(4,Math.round(phase*4));
- const x=520,y=440;
- // Vaste oorsprong, maar iedere slide onthult nieuwe geometrische verbindingen.
- const nodes=[[520,440],[295,270],[765,265],[235,550],[770,600],[420,155],[600,730],[350,755],[855,420],[175,390],[620,135]];
- const edges=[
-  [0,1],[0,2],[0,3],[0,4],[0,5],[0,6],
-  [1,5],[2,10],[3,7],[4,8],[6,7],[2,8],[1,9],
-  [5,10],[7,4],[3,9],[6,8],[1,3]
+ const stage=Math.min(4,Math.floor(i/Math.max(1,n-1)*4+.001));
+ const origin=[520,440];
+ // Geen losse spaken of geforceerde hoekverbindingen: elke vertakking groeit
+ // vanuit een bestaand punt van dezelfde vloeiende lijn.
+ const paths=[
+  {at:1,shade:1,start:origin,curves:[[550,390,603,350,649,334],[705,317,736,279,757,226]]},
+  {at:2,shade:0,start:origin,curves:[[468,409,416,361,385,307],[360,264,333,242,294,223]]},
+  {at:2,shade:1,start:origin,curves:[[550,488,576,548,591,609],[601,663,635,695,688,714]]},
+  {at:3,shade:0,start:[649,334],curves:[[650,294,655,248,639,204],[628,175,604,150,581,136]]},
+  {at:3,shade:1,start:[385,307],curves:[[345,328,298,358,269,406],[246,441,227,479,211,517]]},
+  {at:3,shade:0,start:[591,609],curves:[[557,650,523,678,472,691],[430,704,398,731,376,773]]},
+  {at:4,shade:1,start:[757,226],curves:[[784,197,816,181,855,186]]},
+  {at:4,shade:0,start:[294,223],curves:[[264,200,239,185,214,189]]},
+  {at:4,shade:0,start:[688,714],curves:[[739,712,776,687,797,650]]},
+  {at:4,shade:1,start:[269,406],curves:[[295,446,329,470,368,487]]}
  ];
- const steps=[0,4,8,13,edges.length],visible=steps[stage];
  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
- for(let k=0;k<visible;k++){
-  const [a,b]=edges[k],u=nodes[a],v=nodes[b],focus=[1,4,7,10,13,16].includes(k);
-  ctx.beginPath();ctx.moveTo(...u);
-  // Kleine hoek in plaats van een kaarsrechte verbinding.
-  const bend=k%2===0?.12:-.12,mx=(u[0]+v[0])/2+(v[1]-u[1])*bend,my=(u[1]+v[1])/2-(v[0]-u[0])*bend;
-  ctx.lineTo(mx,my);ctx.lineTo(...v);
-  ctx.strokeStyle=focus?p.ink:p.sub;ctx.globalAlpha=focus?.7:.28+.06*stage;ctx.lineWidth=focus?3.5:2.2;ctx.stroke();
+ for(const path of paths){
+  if(path.at>stage)continue;
+  ctx.beginPath();ctx.moveTo(...path.start);
+  for(const v of path.curves)ctx.bezierCurveTo(...v);
+  ctx.strokeStyle=path.shade?p.ink:p.sub;
+  ctx.globalAlpha=path.shade?.8:.49;
+  ctx.lineWidth=path.shade?3.4:2.7;ctx.stroke();
  }
- // Nieuwe knooppunten worden per slide zichtbaar.
- let active=new Set([0]);for(let k=0;k<visible;k++){active.add(edges[k][0]);active.add(edges[k][1])}
- for(let j of active){let [px,py]=nodes[j];ctx.globalAlpha=j===0?1:.36+.1*stage;ctx.fillStyle=p.ink;ctx.beginPath();ctx.arc(px,py,j===0?10:4,0,Math.PI*2);ctx.fill()}
+ // Het punt blijft exact waar het was, ook als de lijnen zich uitbreiden.
+ ctx.globalAlpha=1;ctx.fillStyle=p.ink;ctx.beginPath();
+ ctx.arc(...origin,9,0,Math.PI*2);ctx.fill();
  ctx.restore()
 }
 function drawSlide(i){const p=palette[$('palette').value];ctx.fillStyle=p.bg;ctx.fillRect(0,0,W,H);if(mode==='wirwar')drawWirwar(i,p,slides.length);else drawPunt(i,p,slides.length);label(slides[i]||'',1005,p);signature(p);$('counter').textContent=(i+1)+' / '+slides.length}
@@ -43,27 +49,27 @@ function words(id){return $(id).value.split(',').map(x=>x.trim()).filter(Boolean
 function smooth(t){return Math.max(0,Math.min(1,t))**2*(3-2*Math.max(0,Math.min(1,t)))}
 function drawLayer(t){
  const p=palette[$('palette').value],dur=+$('duration').value,at=+$('fadeAt').value;
- // Drie duidelijke fasen: de eerste laag, een korte overgang, en voldoende rust voor de tweede laag.
- const transition=Math.min(2.2,Math.max(1.2,(dur-at-4.5)*.35));
- const secondStart=at+transition,questionStart=Math.max(secondStart+3.2,dur-2.3);
- const progress=smooth((t-at)/transition),top=words('upper'),bottom=words('lower');
+ // Gelijktijdige, zachte crossfade: de tweede laag wordt zichtbaar
+ // terwijl de eerste in hetzelfde ritme transparanter wordt.
+ const transition=Math.min(3.2,Math.max(2.2,(dur-at-2.3)*.42));
+ const questionStart=Math.max(at+transition+1.7,dur-2.15);
+ const fade=smooth((t-at)/transition);
+ const top=words('upper'),bottom=words('lower');
  ctx.fillStyle=p.bg;ctx.fillRect(0,0,W,H);
  const topPositions=[[180,350],[580,410],[300,560],[660,650],[140,780],[500,900],[250,1030],[690,1100],[180,1230],[540,1320],[370,1450],[650,1540],[160,1630],[580,250]];
  const bottomPositions=[[220,460],[510,570],[170,760],[580,880],[240,1100],[570,1280],[250,1460],[590,350],[130,1250],[610,1530],[350,950],[650,730],[160,310],[580,1630]];
  ctx.textBaseline='middle';ctx.textAlign='left';ctx.font='400 '+Math.max(38,+$('size').value+8)+'px "DM Sans",sans-serif';
- // Geen twee woordlagen over elkaar tijdens de overgang: de oude laag verdwijnt eerst.
- const oldOpacity=t<at?1:1-smooth((t-at)/(transition*.58));
- const newOpacity=smooth((t-(at+transition*.48))/(transition*.52));
- top.forEach((w,i)=>{let [x,y]=topPositions[i];ctx.globalAlpha=.9*oldOpacity;ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
- bottom.forEach((w,i)=>{let [x,y]=bottomPositions[i];ctx.globalAlpha=.96*newOpacity;ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
+ top.forEach((w,i)=>{let [x,y]=topPositions[i];ctx.globalAlpha=.9*(1-fade);ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
+ bottom.forEach((w,i)=>{let [x,y]=bottomPositions[i];ctx.globalAlpha=.96*fade;ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
  ctx.globalAlpha=1;
  let question=$('question').value.trim();
  if(t>=questionStart&&question){
-  let q=smooth((t-questionStart)/.6);
-  ctx.fillStyle=p.bg;ctx.globalAlpha=q;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;
-  label(question,900,p,q)
+  const q=smooth((t-questionStart)/.85);
+  ctx.fillStyle=p.bg;ctx.globalAlpha=q;ctx.fillRect(0,0,W,H);
+  ctx.globalAlpha=1;label(question,900,p,q)
  }
- signature(p);$('counter').textContent='00:'+String(Math.floor(t)).padStart(2,'0')+' / 00:'+String(dur).padStart(2,'0')
+ signature(p);
+ $('counter').textContent='00:'+String(Math.floor(t)).padStart(2,'0')+' / 00:'+String(dur).padStart(2,'0')
 }
 function render(){if(mode==='laag')drawLayer(0);else drawSlide(index)}
 function download(blob,name){let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
