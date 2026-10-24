@@ -12,35 +12,29 @@ const lines=Array.from({length:8},(_,i)=>linePath(i+1));
 function drawWirwar(i,p,n){ctx.save();ctx.lineWidth=3.1;ctx.lineCap='round';ctx.lineJoin='round';const focus=Math.floor(i/Math.max(1,n-1)*5);
 lines.forEach((pts,k)=>{let highlighted=k===2||k===5;ctx.strokeStyle=highlighted?p.ink:p.sub;ctx.globalAlpha=highlighted?.25+(.72*i/Math.max(1,n-1)):.46-.36*i/Math.max(1,n-1);ctx.beginPath();pts.forEach(([x,y],j)=>j?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke()});ctx.restore()}
 function drawPunt(i,p,n){
- const stage=Math.min(4,Math.round(i/Math.max(1,n-1)*4)),x=520,y=455;
- // Eén vast vertrekpunt. Met elke slide ontstaat een nieuwe, hoekige route.
- // Bestaande lijnen blijven staan, maar krijgen een andere nadruk.
- const routes=[
- [[-110,-115],[-250,-115],[-310,-190]],
- [[105,-75],[205,-75],[260,-175]],
- [[-85,115],[-85,205],[-235,245]],
- [[120,95],[245,95],[245,215]],
- [[-20,-135],[35,-230],[145,-230]],
- [[65,155],[65,255],[145,300]],
- [[-145,20],[-255,20],[-290,105]]
+ const phase=i/Math.max(1,n-1),stage=Math.min(4,Math.round(phase*4));
+ const x=520,y=440;
+ // Vaste oorsprong, maar iedere slide onthult nieuwe geometrische verbindingen.
+ const nodes=[[520,440],[295,270],[765,265],[235,550],[770,600],[420,155],[600,730],[350,755],[855,420],[175,390],[620,135]];
+ const edges=[
+  [0,1],[0,2],[0,3],[0,4],[0,5],[0,6],
+  [1,5],[2,10],[3,7],[4,8],[6,7],[2,8],[1,9],
+  [5,10],[7,4],[3,9],[6,8],[1,3]
  ];
+ const steps=[0,4,8,13,edges.length],visible=steps[stage];
  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
- routes.forEach((points,j)=>{
-   const revealAt=[0,0,1,1,2,3,4][j];
-   const active=stage>=revealAt;
-   const strong=j===3||j===5;
-   ctx.beginPath();ctx.moveTo(x,y);
-   if(active){for(const [dx,dy] of points)ctx.lineTo(x+dx,y+dy)}
-   else{const [dx,dy]=points[0];ctx.lineTo(x+dx*.42,y+dy*.42)}
-   ctx.strokeStyle=strong&&stage>=2?p.ink:p.sub;
-   ctx.globalAlpha=active?(strong?.83:.42):.16;
-   ctx.lineWidth=strong&&stage>=2?4:2.4;ctx.stroke();
- });
- // Kleine geometrische dwarsverbindingen verschijnen pas in latere slides.
- if(stage>=2){ctx.beginPath();ctx.moveTo(x+245,y+95);ctx.lineTo(x+205,y-75);ctx.strokeStyle=p.sub;ctx.globalAlpha=.35;ctx.lineWidth=2;ctx.stroke()}
- if(stage>=3){ctx.beginPath();ctx.moveTo(x-85,y+205);ctx.lineTo(x+65,y+255);ctx.strokeStyle=p.ink;ctx.globalAlpha=.48;ctx.lineWidth=2.6;ctx.stroke()}
- if(stage>=4){ctx.beginPath();ctx.moveTo(x+35,y-230);ctx.lineTo(x+205,y-75);ctx.strokeStyle=p.ink;ctx.globalAlpha=.55;ctx.lineWidth=2.5;ctx.stroke()}
- ctx.globalAlpha=1;ctx.fillStyle=p.ink;ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.fill();ctx.restore()
+ for(let k=0;k<visible;k++){
+  const [a,b]=edges[k],u=nodes[a],v=nodes[b],focus=[1,4,7,10,13,16].includes(k);
+  ctx.beginPath();ctx.moveTo(...u);
+  // Kleine hoek in plaats van een kaarsrechte verbinding.
+  const bend=k%2===0?.12:-.12,mx=(u[0]+v[0])/2+(v[1]-u[1])*bend,my=(u[1]+v[1])/2-(v[0]-u[0])*bend;
+  ctx.lineTo(mx,my);ctx.lineTo(...v);
+  ctx.strokeStyle=focus?p.ink:p.sub;ctx.globalAlpha=focus?.7:.28+.06*stage;ctx.lineWidth=focus?3.5:2.2;ctx.stroke();
+ }
+ // Nieuwe knooppunten worden per slide zichtbaar.
+ let active=new Set([0]);for(let k=0;k<visible;k++){active.add(edges[k][0]);active.add(edges[k][1])}
+ for(let j of active){let [px,py]=nodes[j];ctx.globalAlpha=j===0?1:.36+.1*stage;ctx.fillStyle=p.ink;ctx.beginPath();ctx.arc(px,py,j===0?10:4,0,Math.PI*2);ctx.fill()}
+ ctx.restore()
 }
 function drawSlide(i){const p=palette[$('palette').value];ctx.fillStyle=p.bg;ctx.fillRect(0,0,W,H);if(mode==='wirwar')drawWirwar(i,p,slides.length);else drawPunt(i,p,slides.length);label(slides[i]||'',1005,p);signature(p);$('counter').textContent=(i+1)+' / '+slides.length}
 function chips(){const box=$('slides');box.replaceChildren();slides.forEach((_,i)=>{let b=document.createElement('button');b.textContent=String(i+1).padStart(2,'0');b.className=i===index?'activeButton':'';b.onclick=()=>select(i);box.appendChild(b)})}
@@ -48,25 +42,27 @@ function select(i){index=Math.max(0,Math.min(slides.length-1,i));$('slideText').
 function words(id){return $(id).value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,14)}
 function smooth(t){return Math.max(0,Math.min(1,t))**2*(3-2*Math.max(0,Math.min(1,t)))}
 function drawLayer(t){
- const p=palette[$('palette').value],dur=+$('duration').value,at=+$('fadeAt').value,top=words('upper'),bottom=words('lower');
- // Eerst een rustige eerste laag, daarna een korte overgang en vervolgens
- // een lange, volledig stabiele leestijd voor de tweede laag.
- const transition=2.2,questionStart=dur-2.8;
- const shift=smooth((t-at)/transition);
- const questionProgress=smooth((t-questionStart)/.65);
+ const p=palette[$('palette').value],dur=+$('duration').value,at=+$('fadeAt').value;
+ // Drie duidelijke fasen: de eerste laag, een korte overgang, en voldoende rust voor de tweede laag.
+ const transition=Math.min(2.2,Math.max(1.2,(dur-at-4.5)*.35));
+ const secondStart=at+transition,questionStart=Math.max(secondStart+3.2,dur-2.3);
+ const progress=smooth((t-at)/transition),top=words('upper'),bottom=words('lower');
  ctx.fillStyle=p.bg;ctx.fillRect(0,0,W,H);
  const topPositions=[[180,350],[580,410],[300,560],[660,650],[140,780],[500,900],[250,1030],[690,1100],[180,1230],[540,1320],[370,1450],[650,1540],[160,1630],[580,250]];
  const bottomPositions=[[220,460],[510,570],[170,760],[580,880],[240,1100],[570,1280],[250,1460],[590,350],[130,1250],[610,1530],[350,950],[650,730],[160,310],[580,1630]];
  ctx.textBaseline='middle';ctx.textAlign='left';ctx.font='400 '+Math.max(38,+$('size').value+8)+'px "DM Sans",sans-serif';
- // Geen langdurig door elkaar lopende woorden: eerste laag verdwijnt
- // voordat de tweede laag zichtbaar wordt.
- const topAlpha=.92*(1-smooth(shift*2));
- const bottomAlpha=.96*smooth((shift-.5)*2);
- top.forEach((w,i)=>{let [x,y]=topPositions[i];ctx.globalAlpha=topAlpha*(1-questionProgress);ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
- bottom.forEach((w,i)=>{let [x,y]=bottomPositions[i];ctx.globalAlpha=bottomAlpha*(1-questionProgress);ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
+ // Geen twee woordlagen over elkaar tijdens de overgang: de oude laag verdwijnt eerst.
+ const oldOpacity=t<at?1:1-smooth((t-at)/(transition*.58));
+ const newOpacity=smooth((t-(at+transition*.48))/(transition*.52));
+ top.forEach((w,i)=>{let [x,y]=topPositions[i];ctx.globalAlpha=.9*oldOpacity;ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
+ bottom.forEach((w,i)=>{let [x,y]=bottomPositions[i];ctx.globalAlpha=.96*newOpacity;ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
  ctx.globalAlpha=1;
- const question=$('question').value.trim();
- if(question&&t>=questionStart){ctx.fillStyle=p.bg;ctx.globalAlpha=questionProgress;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;label(question,900,p,questionProgress)}
+ let question=$('question').value.trim();
+ if(t>=questionStart&&question){
+  let q=smooth((t-questionStart)/.6);
+  ctx.fillStyle=p.bg;ctx.globalAlpha=q;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;
+  label(question,900,p,q)
+ }
  signature(p);$('counter').textContent='00:'+String(Math.floor(t)).padStart(2,'0')+' / 00:'+String(dur).padStart(2,'0')
 }
 function render(){if(mode==='laag')drawLayer(0);else drawSlide(index)}
