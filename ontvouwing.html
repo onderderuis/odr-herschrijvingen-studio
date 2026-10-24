@@ -32,7 +32,37 @@ let slides=sample.slice(),selected=0;
 try{const saved=JSON.parse(localStorage.getItem('odr-ontvouwing-v1'));if(saved&&Array.isArray(saved.slides)&&saved.slides.length){slides=saved.slides.slice(0,20).map(String);for(const key of ['palette','align','size','lineStyle','signature'])if(saved[key]!==undefined&&$(key)){if($(key).type==='checkbox')$(key).checked=!!saved[key];else if([...$(key).options].some(o=>o.value===String(saved[key])))$(key).value=saved[key]}}}catch(e){}
 function save(){try{localStorage.setItem('odr-ontvouwing-v1',JSON.stringify({slides,...Object.fromEntries(['palette','align','size','lineStyle'].map(k=>[k,$(k).value])),signature:$('signature').checked}))}catch(e){}}
 function wrap(text,maxWidth,font){ctx.font='400 '+font+'px "DM Sans",sans-serif';const result=[];for(const paragraph of text.split('\n')){if(!paragraph.trim()){result.push('');continue}let row='';for(const word of paragraph.trim().split(/\s+/)){const test=row?row+' '+word:word;if(ctx.measureText(test).width>maxWidth&&row){result.push(row);row=word}else row=test}if(row)result.push(row)}return result}
-function line(i,n,c){if($('lineStyle').value==='none')return;ctx.save();ctx.strokeStyle=c.sub;ctx.globalAlpha=.55;ctx.lineWidth=2.4;ctx.lineCap='round';const x0=115,y=1090,width=850,p=(i+1)/n;if($('lineStyle').value==='simple'){ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x0+width*p,y);ctx.stroke()}else{ctx.beginPath();ctx.moveTo(x0,y+12);const steps=90;for(let j=0;j<=steps;j++){const t=j/steps;if(t>p)break;const x=x0+width*t;const yy=y+12+Math.sin(t*Math.PI*2.4)*10+Math.sin(t*Math.PI*6.2)*3;ctx.lineTo(x,yy)}ctx.stroke();ctx.beginPath();ctx.arc(x0+width*p,y+12+Math.sin(p*Math.PI*2.4)*10+Math.sin(p*Math.PI*6.2)*3,3,0,Math.PI*2);ctx.fillStyle=c.sub;ctx.fill()}ctx.restore()}
+function line(i,n,c){
+ if($('lineStyle').value==='none')return;
+ ctx.save();
+ ctx.strokeStyle=c.sub;
+ ctx.globalAlpha=.65;
+ ctx.lineWidth=2.8;
+ ctx.lineCap='round';
+ ctx.lineJoin='round';
+ // Eén ononderbroken lijn door de volledige carrousel.
+ // Elke slide toont precies het volgende stuk van dezelfde golf.
+ // De lijn komt links binnen en loopt rechts buiten beeld door.
+ const y0=1050,step=3;
+ ctx.beginPath();
+ for(let x=0;x<=W;x+=step){
+  const globalX=i*W+x;
+  const y=$('lineStyle').value==='simple'?y0:
+    y0+72*Math.sin(globalX*Math.PI*2/1710+.4)
+      +27*Math.sin(globalX*Math.PI*2/870-1.1)
+      +9*Math.sin(globalX*Math.PI*2/410+.7);
+  if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+ }
+ // Exact eindpunt zodat het aansluit op de volgende slide.
+ const endX=(i+1)*W;
+ const endY=$('lineStyle').value==='simple'?y0:
+   y0+72*Math.sin(endX*Math.PI*2/1710+.4)
+     +27*Math.sin(endX*Math.PI*2/870-1.1)
+     +9*Math.sin(endX*Math.PI*2/410+.7);
+ ctx.lineTo(W,endY);
+ ctx.stroke();
+ ctx.restore()
+}
 function render(i=selected){const c=palettes[$('palette').value],text=slides[i]||'';ctx.fillStyle=c.bg;ctx.fillRect(0,0,W,H);let font=+$('size').value,rows=[],lh=1.48;do{rows=wrap(text,830,font);if(rows.length*font*lh<710&&rows.every(r=>ctx.measureText(r).width<850))break;font-=2}while(font>30);const align=$('align').value;ctx.textAlign=align==='center'?'center':'left';ctx.textBaseline='middle';ctx.fillStyle=c.ink;ctx.font='400 '+font+'px "DM Sans",sans-serif';const x=align==='center'?W/2:115,total=(rows.length-1)*font*lh,start=620-total/2;rows.forEach((r,k)=>ctx.fillText(r,x,start+k*font*lh));line(i,slides.length,c);if($('signature').checked){ctx.fillStyle=c.sub;ctx.textAlign='left';ctx.font='400 23px "DM Sans",sans-serif';ctx.fillText('onder de ruis.',115,1238)}$('counter').textContent=(i+1)+' / '+slides.length;$('slideNo').textContent='Slide '+(i+1);$('prev').disabled=i===0;$('next').disabled=i===slides.length-1}
 function refresh(){const list=$('slideList');list.replaceChildren();slides.forEach((s,i)=>{const row=document.createElement('div');row.className='slide-row'+(i===selected?' selected':'');const pick=document.createElement('button');pick.className='pick';pick.textContent=(i+1)+'. '+(s.trim().replace(/\s+/g,' ').slice(0,53)||'(leeg)');pick.onclick=()=>select(i);row.append(pick);for(const [symbol,delta] of [['↑',-1],['↓',1]]){const b=document.createElement('button');b.className='small';b.textContent=symbol;b.title='Verplaats slide';b.disabled=i+delta<0||i+delta>=slides.length;b.onclick=()=>{[slides[i],slides[i+delta]]=[slides[i+delta],slides[i]];select(i+delta);save()};row.append(b)}list.append(row)});$('editLabel').textContent='Tekst van slide '+(selected+1);$('slideText').value=slides[selected];render()}
 function select(i){selected=Math.max(0,Math.min(slides.length-1,i));refresh()}
