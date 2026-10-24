@@ -11,7 +11,7 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d'),W=1080,H=1920,TAU=Math.PI*2;
 let raf=0,playing=false,exporting=false,cancelExport=null;
-const palettes={beige:{bg:'#d8c8b6',ink:'#4b352a',sub:'#765b48'},brown:{bg:'#291b15',ink:'#e9d7c5',sub:'#c7ad97'}};
+const palettes={beige:{bg:'#e6d7c5',ink:'#4b352a',sub:'#765b48'},brown:{bg:'#291b15',ink:'#e9d7c5',sub:'#c7ad97'}};
 function config(){return {duration:+$('duration').value,palette:palettes[$('background').value],spinner:$('spinner').value,speed:+$('speed').value,size:+$('size').value,question:$('question').value.trim(),at:+$('questionAt').value,fade:+$('fadeDuration').value,position:$('position').value,show:$('showQuestion').checked,signature:$('signature').checked}}
 function lines(text,max,font){ctx.font='400 '+font+'px "DM Sans",sans-serif';let out=[],row='';for(const word of text.split(/\s+/)){let test=row?row+' '+word:word;if(ctx.measureText(test).width>max&&row){out.push(row);row=word}else row=test}if(row)out.push(row);return out}
 function render(t,c=config()){
