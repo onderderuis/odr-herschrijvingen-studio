@@ -11,21 +11,64 @@ function linePath(seed,phase=0){let points=[];for(let j=0;j<=140;j++){let t=j/14
 const lines=Array.from({length:8},(_,i)=>linePath(i+1));
 function drawWirwar(i,p,n){ctx.save();ctx.lineWidth=3.1;ctx.lineCap='round';ctx.lineJoin='round';const focus=Math.floor(i/Math.max(1,n-1)*5);
 lines.forEach((pts,k)=>{let highlighted=k===2||k===5;ctx.strokeStyle=highlighted?p.ink:p.sub;ctx.globalAlpha=highlighted?.25+(.72*i/Math.max(1,n-1)):.46-.36*i/Math.max(1,n-1);ctx.beginPath();pts.forEach(([x,y],j)=>j?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke()});ctx.restore()}
-function drawPunt(i,p,n){let phase=i/Math.max(1,n-1);ctx.save();const x=520,y=440;let dirs=[[-260,-185],[265,-155],[-300,130],[250,210],[-35,-280],[85,280],[-180,240]];dirs.forEach(([dx,dy],j)=>{ctx.beginPath();ctx.moveTo(x,y);let len=.4+.6*Math.min(1,phase*2+.15);ctx.lineTo(x+dx*len,y+dy*len);ctx.strokeStyle=j===3||j===5?p.ink:p.sub;ctx.globalAlpha=j===3||j===5?.22+.65*phase:.22+.3*(1-phase);ctx.lineWidth=j===3||j===5?3.4:2.2;ctx.stroke()});ctx.globalAlpha=1;ctx.fillStyle=p.ink;ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.fill();ctx.restore()}
+function drawPunt(i,p,n){
+ const stage=Math.min(4,Math.round(i/Math.max(1,n-1)*4)),x=520,y=455;
+ // Eén vast vertrekpunt. Met elke slide ontstaat een nieuwe, hoekige route.
+ // Bestaande lijnen blijven staan, maar krijgen een andere nadruk.
+ const routes=[
+ [[-110,-115],[-250,-115],[-310,-190]],
+ [[105,-75],[205,-75],[260,-175]],
+ [[-85,115],[-85,205],[-235,245]],
+ [[120,95],[245,95],[245,215]],
+ [[-20,-135],[35,-230],[145,-230]],
+ [[65,155],[65,255],[145,300]],
+ [[-145,20],[-255,20],[-290,105]]
+ ];
+ ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+ routes.forEach((points,j)=>{
+   const revealAt=[0,0,1,1,2,3,4][j];
+   const active=stage>=revealAt;
+   const strong=j===3||j===5;
+   ctx.beginPath();ctx.moveTo(x,y);
+   if(active){for(const [dx,dy] of points)ctx.lineTo(x+dx,y+dy)}
+   else{const [dx,dy]=points[0];ctx.lineTo(x+dx*.42,y+dy*.42)}
+   ctx.strokeStyle=strong&&stage>=2?p.ink:p.sub;
+   ctx.globalAlpha=active?(strong?.83:.42):.16;
+   ctx.lineWidth=strong&&stage>=2?4:2.4;ctx.stroke();
+ });
+ // Kleine geometrische dwarsverbindingen verschijnen pas in latere slides.
+ if(stage>=2){ctx.beginPath();ctx.moveTo(x+245,y+95);ctx.lineTo(x+205,y-75);ctx.strokeStyle=p.sub;ctx.globalAlpha=.35;ctx.lineWidth=2;ctx.stroke()}
+ if(stage>=3){ctx.beginPath();ctx.moveTo(x-85,y+205);ctx.lineTo(x+65,y+255);ctx.strokeStyle=p.ink;ctx.globalAlpha=.48;ctx.lineWidth=2.6;ctx.stroke()}
+ if(stage>=4){ctx.beginPath();ctx.moveTo(x+35,y-230);ctx.lineTo(x+205,y-75);ctx.strokeStyle=p.ink;ctx.globalAlpha=.55;ctx.lineWidth=2.5;ctx.stroke()}
+ ctx.globalAlpha=1;ctx.fillStyle=p.ink;ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.fill();ctx.restore()
+}
 function drawSlide(i){const p=palette[$('palette').value];ctx.fillStyle=p.bg;ctx.fillRect(0,0,W,H);if(mode==='wirwar')drawWirwar(i,p,slides.length);else drawPunt(i,p,slides.length);label(slides[i]||'',1005,p);signature(p);$('counter').textContent=(i+1)+' / '+slides.length}
 function chips(){const box=$('slides');box.replaceChildren();slides.forEach((_,i)=>{let b=document.createElement('button');b.textContent=String(i+1).padStart(2,'0');b.className=i===index?'activeButton':'';b.onclick=()=>select(i);box.appendChild(b)})}
 function select(i){index=Math.max(0,Math.min(slides.length-1,i));$('slideText').value=slides[index];chips();$('prev').disabled=index===0;$('next').disabled=index===slides.length-1;$('remove').disabled=slides.length===1;drawSlide(index);save()}
 function words(id){return $(id).value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,14)}
 function smooth(t){return Math.max(0,Math.min(1,t))**2*(3-2*Math.max(0,Math.min(1,t)))}
-function drawLayer(t){const p=palette[$('palette').value],dur=+$('duration').value,at=+$('fadeAt').value,progress=smooth((t-at)/(dur-at-2)),top=words('upper'),bottom=words('lower');ctx.fillStyle=p.bg;ctx.fillRect(0,0,W,H);
-const topPositions=[[180,350],[580,410],[300,560],[660,650],[140,780],[500,900],[250,1030],[690,1100],[180,1230],[540,1320],[370,1450],[650,1540],[160,1630],[580,250]];
-const bottomPositions=[[220,460],[510,570],[170,760],[580,880],[240,1100],[570,1280],[250,1460],[590,350],[130,1250],[610,1530],[350,950],[650,730],[160,310],[580,1630]];
-ctx.textBaseline='middle';ctx.textAlign='left';ctx.font='400 '+Math.max(38,+$('size').value+8)+'px "DM Sans",sans-serif';
-top.forEach((w,i)=>{let [x,y]=topPositions[i];ctx.globalAlpha=.9-.78*progress;ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
-bottom.forEach((w,i)=>{let [x,y]=bottomPositions[i];ctx.globalAlpha=Math.max(0,progress-.12)*.95;ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
-ctx.globalAlpha=1;
-let question=$('question').value.trim();if(t>dur-3&&question){ctx.fillStyle=p.bg;ctx.globalAlpha=smooth((t-(dur-3))/.55)*.97;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;label(question,900,p,smooth((t-(dur-2.65))/.7))}
-signature(p);$('counter').textContent='00:'+String(Math.floor(t)).padStart(2,'0')+' / 00:'+String(dur).padStart(2,'0')}
+function drawLayer(t){
+ const p=palette[$('palette').value],dur=+$('duration').value,at=+$('fadeAt').value,top=words('upper'),bottom=words('lower');
+ // Eerst een rustige eerste laag, daarna een korte overgang en vervolgens
+ // een lange, volledig stabiele leestijd voor de tweede laag.
+ const transition=2.2,questionStart=dur-2.8;
+ const shift=smooth((t-at)/transition);
+ const questionProgress=smooth((t-questionStart)/.65);
+ ctx.fillStyle=p.bg;ctx.fillRect(0,0,W,H);
+ const topPositions=[[180,350],[580,410],[300,560],[660,650],[140,780],[500,900],[250,1030],[690,1100],[180,1230],[540,1320],[370,1450],[650,1540],[160,1630],[580,250]];
+ const bottomPositions=[[220,460],[510,570],[170,760],[580,880],[240,1100],[570,1280],[250,1460],[590,350],[130,1250],[610,1530],[350,950],[650,730],[160,310],[580,1630]];
+ ctx.textBaseline='middle';ctx.textAlign='left';ctx.font='400 '+Math.max(38,+$('size').value+8)+'px "DM Sans",sans-serif';
+ // Geen langdurig door elkaar lopende woorden: eerste laag verdwijnt
+ // voordat de tweede laag zichtbaar wordt.
+ const topAlpha=.92*(1-smooth(shift*2));
+ const bottomAlpha=.96*smooth((shift-.5)*2);
+ top.forEach((w,i)=>{let [x,y]=topPositions[i];ctx.globalAlpha=topAlpha*(1-questionProgress);ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
+ bottom.forEach((w,i)=>{let [x,y]=bottomPositions[i];ctx.globalAlpha=bottomAlpha*(1-questionProgress);ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
+ ctx.globalAlpha=1;
+ const question=$('question').value.trim();
+ if(question&&t>=questionStart){ctx.fillStyle=p.bg;ctx.globalAlpha=questionProgress;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;label(question,900,p,questionProgress)}
+ signature(p);$('counter').textContent='00:'+String(Math.floor(t)).padStart(2,'0')+' / 00:'+String(dur).padStart(2,'0')
+}
 function render(){if(mode==='laag')drawLayer(0);else drawSlide(index)}
 function download(blob,name){let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
 const blob=()=>new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(Error('PNG kon niet worden gemaakt')),'image/png'));
