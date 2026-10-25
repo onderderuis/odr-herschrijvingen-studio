@@ -14,19 +14,19 @@ lines.forEach((pts,k)=>{let highlighted=k===2||k===5;ctx.strokeStyle=highlighted
 function drawPunt(i,p,n){
  const stage=Math.min(4,Math.floor(i/Math.max(1,n-1)*4+.001));
  const origin=[520,440];
- // Geen losse spaken of geforceerde hoekverbindingen: elke vertakking groeit
- // vanuit een bestaand punt van dezelfde vloeiende lijn.
+ // Dezelfde lijnen blijven bestaan: er komen alleen nieuwe stukken bij.
+ // Lange, golvende Bezier-bewegingen lopen door voordat ze vertakken.
  const paths=[
-  {at:1,shade:1,start:origin,curves:[[550,390,603,350,649,334],[705,317,736,279,757,226]]},
-  {at:2,shade:0,start:origin,curves:[[468,409,416,361,385,307],[360,264,333,242,294,223]]},
-  {at:2,shade:1,start:origin,curves:[[550,488,576,548,591,609],[601,663,635,695,688,714]]},
-  {at:3,shade:0,start:[649,334],curves:[[650,294,655,248,639,204],[628,175,604,150,581,136]]},
-  {at:3,shade:1,start:[385,307],curves:[[345,328,298,358,269,406],[246,441,227,479,211,517]]},
-  {at:3,shade:0,start:[591,609],curves:[[557,650,523,678,472,691],[430,704,398,731,376,773]]},
-  {at:4,shade:1,start:[757,226],curves:[[784,197,816,181,855,186]]},
-  {at:4,shade:0,start:[294,223],curves:[[264,200,239,185,214,189]]},
-  {at:4,shade:0,start:[688,714],curves:[[739,712,776,687,797,650]]},
-  {at:4,shade:1,start:[269,406],curves:[[295,446,329,470,368,487]]}
+  {at:1,shade:1,start:origin,curves:[[561,365,600,359,650,335],[709,310,721,226,780,246],[843,265,830,354,885,328],[918,309,937,265,964,255]]},
+  {at:2,shade:0,start:origin,curves:[[470,416,431,344,386,309],[342,273,302,201,255,237],[214,268,222,347,173,341],[138,335,125,296,108,277]]},
+  {at:2,shade:1,start:origin,curves:[[552,490,565,556,591,609],[625,680,716,677,698,740],[682,802,594,798,619,850],[642,902,733,896,768,932]]},
+  {at:3,shade:0,start:[650,335],curves:[[632,280,663,241,639,204],[613,154,545,171,529,116]]},
+  {at:3,shade:1,start:[386,309],curves:[[336,316,315,375,269,406],[223,437,256,507,206,550],[170,580,134,552,103,600]]},
+  {at:3,shade:0,start:[591,609],curves:[[554,647,515,664,472,691],[408,735,449,812,392,827]]},
+  {at:4,shade:1,start:[780,246],curves:[[785,185,846,174,850,123],[856,89,897,76,923,89]]},
+  {at:4,shade:0,start:[255,237],curves:[[248,171,195,153,163,178],[122,205,104,172,83,147]]},
+  {at:4,shade:0,start:[698,740],curves:[[758,710,798,753,833,724],[868,695,841,625,891,608]]},
+  {at:4,shade:1,start:[269,406],curves:[[310,450,340,450,372,487],[425,548,405,604,453,622]]}
  ];
  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
  for(const path of paths){
@@ -37,7 +37,6 @@ function drawPunt(i,p,n){
   ctx.globalAlpha=path.shade?.8:.49;
   ctx.lineWidth=path.shade?3.4:2.7;ctx.stroke();
  }
- // Het punt blijft exact waar het was, ook als de lijnen zich uitbreiden.
  ctx.globalAlpha=1;ctx.fillStyle=p.ink;ctx.beginPath();
  ctx.arc(...origin,9,0,Math.PI*2);ctx.fill();
  ctx.restore()
@@ -47,18 +46,45 @@ function chips(){const box=$('slides');box.replaceChildren();slides.forEach((_,i
 function select(i){index=Math.max(0,Math.min(slides.length-1,i));$('slideText').value=slides[index];chips();$('prev').disabled=index===0;$('next').disabled=index===slides.length-1;$('remove').disabled=slides.length===1;drawSlide(index);save()}
 function words(id){return $(id).value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,14)}
 function smooth(t){return Math.max(0,Math.min(1,t))**2*(3-2*Math.max(0,Math.min(1,t)))}
+function scatteredPositions(words,seed,font){
+ // Deterministische, asymmetrische spreiding: geen kolommen of regelmatige rijen.
+ // Houdt rekening met de werkelijke breedte van ieder woord.
+ let state=seed>>>0;
+ function random(){state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296}
+ const placed=[],result=[];
+ ctx.font='400 '+font+'px "DM Sans",sans-serif';
+ for(const word of words){
+  const width=Math.min(ctx.measureText(word).width,930);
+  let choice=null,best=-Infinity;
+  for(let j=0;j<180;j++){
+   const x=70+random()*Math.max(1,940-width);
+   const y=225+random()*1450;
+   let clearance=Infinity;
+   for(const p of placed){
+    const dx=Math.max(0,Math.max(p.x-(x+width),x-(p.x+p.w)));
+    const dy=Math.abs(y-p.y);
+    const dist=Math.hypot(dx*1.05,dy*1.15);
+    clearance=Math.min(clearance,dist)
+   }
+   if(!placed.length)clearance=999;
+   if(clearance>best){best=clearance;choice={x,y,w:width}}
+   if(clearance>200)break
+  }
+  placed.push(choice);result.push([choice.x,choice.y])
+ }
+ return result
+}
 function drawLayer(t){
  const p=palette[$('palette').value],dur=+$('duration').value,at=+$('fadeAt').value;
- // Gelijktijdige, zachte crossfade: de tweede laag wordt zichtbaar
- // terwijl de eerste in hetzelfde ritme transparanter wordt.
  const transition=Math.min(3.2,Math.max(2.2,(dur-at-2.3)*.42));
  const questionStart=Math.max(at+transition+1.7,dur-2.15);
  const fade=smooth((t-at)/transition);
  const top=words('upper'),bottom=words('lower');
  ctx.fillStyle=p.bg;ctx.fillRect(0,0,W,H);
- const topPositions=[[180,350],[580,410],[300,560],[660,650],[140,780],[500,900],[250,1030],[690,1100],[180,1230],[540,1320],[370,1450],[650,1540],[160,1630],[580,250]];
- const bottomPositions=[[220,460],[510,570],[170,760],[580,880],[240,1100],[570,1280],[250,1460],[590,350],[130,1250],[610,1530],[350,950],[650,730],[160,310],[580,1630]];
- ctx.textBaseline='middle';ctx.textAlign='left';ctx.font='400 '+Math.max(38,+$('size').value+8)+'px "DM Sans",sans-serif';
+ const font=Math.max(38,+$('size').value+8);
+ ctx.textBaseline='middle';ctx.textAlign='left';ctx.font='400 '+font+'px "DM Sans",sans-serif';
+ const topPositions=scatteredPositions(top,71237,font);
+ const bottomPositions=scatteredPositions(bottom,42853,font);
  top.forEach((w,i)=>{let [x,y]=topPositions[i];ctx.globalAlpha=.9*(1-fade);ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
  bottom.forEach((w,i)=>{let [x,y]=bottomPositions[i];ctx.globalAlpha=.96*fade;ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
  ctx.globalAlpha=1;
