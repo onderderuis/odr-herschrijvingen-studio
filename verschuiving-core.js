@@ -13,32 +13,37 @@ function drawWirwar(i,p,n){ctx.save();ctx.lineWidth=3.1;ctx.lineCap='round';ctx.
 lines.forEach((pts,k)=>{let highlighted=k===2||k===5;ctx.strokeStyle=highlighted?p.ink:p.sub;ctx.globalAlpha=highlighted?.25+(.72*i/Math.max(1,n-1)):.46-.36*i/Math.max(1,n-1);ctx.beginPath();pts.forEach(([x,y],j)=>j?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke()});ctx.restore()}
 function drawPunt(i,p,n){
  const stage=Math.min(4,Math.floor(i/Math.max(1,n-1)*4+.001));
- const origin=[520,440];
- // Dezelfde lijnen blijven bestaan: er komen alleen nieuwe stukken bij.
- // Lange, golvende Bezier-bewegingen lopen door voordat ze vertakken.
- const paths=[
-  {at:1,shade:1,start:origin,curves:[[561,365,600,359,650,335],[709,310,721,226,780,246],[843,265,830,354,885,328],[918,309,937,265,964,255]]},
-  {at:2,shade:0,start:origin,curves:[[470,416,431,344,386,309],[342,273,302,201,255,237],[214,268,222,347,173,341],[138,335,125,296,108,277]]},
-  {at:2,shade:1,start:origin,curves:[[552,490,565,556,591,609],[625,680,716,677,698,740],[682,802,594,798,619,850],[642,902,733,896,768,932]]},
-  {at:3,shade:0,start:[650,335],curves:[[632,280,663,241,639,204],[613,154,545,171,529,116]]},
-  {at:3,shade:1,start:[386,309],curves:[[336,316,315,375,269,406],[223,437,256,507,206,550],[170,580,134,552,103,600]]},
-  {at:3,shade:0,start:[591,609],curves:[[554,647,515,664,472,691],[408,735,449,812,392,827]]},
-  {at:4,shade:1,start:[780,246],curves:[[785,185,846,174,850,123],[856,89,897,76,923,89]]},
-  {at:4,shade:0,start:[255,237],curves:[[248,171,195,153,163,178],[122,205,104,172,83,147]]},
-  {at:4,shade:0,start:[698,740],curves:[[758,710,798,753,833,724],[868,695,841,625,891,608]]},
-  {at:4,shade:1,start:[269,406],curves:[[310,450,340,450,372,487],[425,548,405,604,453,622]]}
- ];
+ const ox=190,oy=445;
+ // Geïnspireerd op vloeiende, bijna parallelle getekende stroomlijnen:
+ // geen knooppunten of vertakkingen, maar een samenhangende natuurlijke stroming.
+ // Dezelfde golf blijft bestaan terwijl er per slide meer lijnen zichtbaar worden.
+ const counts=[0,3,6,9,13],count=counts[stage];
+ const ends=[0,780,870,970,1110],end=ends[stage];
  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
- for(const path of paths){
-  if(path.at>stage)continue;
-  ctx.beginPath();ctx.moveTo(...path.start);
-  for(const v of path.curves)ctx.bezierCurveTo(...v);
-  ctx.strokeStyle=path.shade?p.ink:p.sub;
-  ctx.globalAlpha=path.shade?.8:.49;
-  ctx.lineWidth=path.shade?3.4:2.7;ctx.stroke();
+ for(let k=0;k<count;k++){
+   const band=k-6,amp=1+(k%4)*.075;
+   ctx.beginPath();
+   const start=ox+(k%3)*5;
+   for(let x=start;x<=end;x+=3){
+     const d=Math.max(0,x-ox);
+     // Lijnen vloeien vanuit dezelfde buurt naar een open, golvende waaier.
+     // De golven lopen door in plaats van steeds op een knooppunt te stoppen.
+     const spread=(1-Math.exp(-d/185))*band*13;
+     const common=amp*(66*Math.sin(d/176+.2)-66*Math.sin(.2)
+                        +30*Math.sin(d/87+.65)-30*Math.sin(.65));
+     const drift=(1-Math.exp(-d/260))*(
+       19*Math.sin(d/140+k*.23)-19*Math.sin(k*.23)
+       +11*Math.sin(d/65+k*.17)-11*Math.sin(k*.17));
+     const y=oy+spread+common+drift;
+     if(x===start)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+   }
+   ctx.strokeStyle=k%4===0?p.ink:p.sub;
+   ctx.globalAlpha=k%4===0?.75:.49;
+   ctx.lineWidth=k%4===0?2.9:2.2;
+   ctx.stroke();
  }
- ctx.globalAlpha=1;ctx.fillStyle=p.ink;ctx.beginPath();
- ctx.arc(...origin,9,0,Math.PI*2);ctx.fill();
+ ctx.globalAlpha=1;ctx.fillStyle=p.ink;
+ ctx.beginPath();ctx.arc(ox,oy,8,0,Math.PI*2);ctx.fill();
  ctx.restore()
 }
 function drawSlide(i){const p=palette[$('palette').value];ctx.fillStyle=p.bg;ctx.fillRect(0,0,W,H);if(mode==='wirwar')drawWirwar(i,p,slides.length);else drawPunt(i,p,slides.length);label(slides[i]||'',1005,p);signature(p);$('counter').textContent=(i+1)+' / '+slides.length}
