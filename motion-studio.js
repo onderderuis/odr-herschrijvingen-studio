@@ -78,6 +78,40 @@ function drawLight(t){
  glow.addColorStop(1,'rgba(239,188,132,0)');
  g.fillStyle=glow;g.fillRect(0,0,W,H)
 }
+
+function brownPlane(t){
+ if(!$('planeOn')?.checked)return;
+ const side=$('planeSide').value,shape=$('planeShape').value;
+ const coverage=val('planeCover')/100,amplitude=val('planeWave')/100;
+ const velocity=val('planeSpeed')/100;
+ const alpha=val('planeOpacity')/100;
+ const vertical=side==='left'||side==='right',extent=vertical?W:H,along=vertical?H:W;
+ const center=extent*(side==='right'||side==='bottom'?1-coverage:coverage);
+ function boundary(u){
+  if(shape==='straight')return center;
+  const phase=t*velocity*.85;
+  const wave1=Math.sin(u*pi*2.1-phase);
+  const wave2=Math.sin(u*pi*4.3+phase*.71+.6);
+  const wave3=Math.sin(u*pi*1.1+phase*.33+1.7);
+  const raw=shape==='flow'?wave1*.65+wave2*.20+wave3*.15:
+     Math.sin(u*pi*1.4-phase)*.45+Math.sin(u*pi*3.3+phase*.6)*.35+
+     Math.sin(u*pi*6.2-phase*.4)*.20;
+  return Math.max(0,Math.min(extent,center+amplitude*extent*.42*raw));
+ }
+ g.save();g.globalAlpha=alpha;g.fillStyle='#291b15';g.beginPath();
+ if(side==='left')g.moveTo(0,0);
+ else if(side==='right')g.moveTo(W,0);
+ else if(side==='top')g.moveTo(0,0);
+ else g.moveTo(0,H);
+ if(vertical){
+  if(side==='left'){g.lineTo(boundary(0),0);for(let y=8;y<=H;y+=8)g.lineTo(boundary(y/H),y);g.lineTo(0,H)}
+  else {g.lineTo(boundary(0),0);for(let y=8;y<=H;y+=8)g.lineTo(boundary(y/H),y);g.lineTo(W,H)}
+ }else{
+  if(side==='top'){g.lineTo(0,boundary(0));for(let x=8;x<=W;x+=8)g.lineTo(x,boundary(x/W));g.lineTo(W,0)}
+  else {g.lineTo(0,boundary(0));for(let x=8;x<=W;x+=8)g.lineTo(x,boundary(x/W));g.lineTo(W,H)}
+ }
+ g.closePath();g.fill();g.restore()
+}
 function drawText(t){
  const content=$('message').value.trim();if(!content)return;
  const dur=val('duration'),on=Math.max(0,dur-4.1),alpha=ease((t-on)/1.1);
@@ -89,12 +123,13 @@ function drawText(t){
  g.restore()
 }
 function render(t){
- g.fillStyle='#291b15';g.fillRect(0,0,W,H);
+ g.fillStyle=$('planeOn')?.checked?'#493126':'#291b15';g.fillRect(0,0,W,H);
  if($('photoOrder').value==='back')imageLayer();
  if(kind==='beweging')drawLines(t);
  if(kind==='punten')drawPoints(t);
  if(kind==='lichtval')drawLight(t);
  if($('photoOrder').value==='front')imageLayer();
+ brownPlane(t);
  drawText(t);
  if($('signature').checked){g.fillStyle='#c7ad97';g.font='26px "DM Sans",sans-serif';g.textAlign='left';g.fillText('onder de ruis.',94,H-105)}
  $('counter').textContent=Math.min(val('duration'),t).toFixed(1)+' / '+val('duration')+' sec'
