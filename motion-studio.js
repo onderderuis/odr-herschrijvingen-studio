@@ -1,7 +1,57 @@
 (()=>{'use strict';
-const $=id=>document.getElementById(id),c=$('canvas'),g=c.getContext('2d'),W=c.width,H=c.height,kind=document.body.dataset.kind;
+const $=id=>document.getElementById(id),c=$('canvas'),g=c.getContext('2d'),W=c.width,kind=document.body.dataset.kind;let H=c.height;
 let photo=null,photoURL=null,playing=false,recording=false,frame=0,start=0,raf=0;
 const pi=Math.PI;
+
+// De Lichtval: elke carrouselslide heeft een eigen lichtval, vlak, tekst en animatiekeuze.
+const isLichtval=kind==='lichtval';
+const slideControlIds=['duration','amount','speed','intensity','message','lightOverPlane','planeOn','effectPlaneOrder','planeSide','planeShape','planeCover','planeTop','planeBottom','planeCurve','planeWave','planeSpeed','planeOpacity','photoOn','photoOrder','photoHalf','photoBlend','photoOpacity','photoZoom','photoX','photoY','signature'];
+let slideIndex=0,slideData=[],slideFormat='carousel';
+const slideStore='odr-lichtval-slides-v1';
+function readSlide(){const o={mode:$('slideMode')?.value||'image'};for(const id of slideControlIds){const e=$(id);if(e)o[id]=e.type==='checkbox'?e.checked:e.value}return o}
+function writeSlide(o){if(!o)return;for(const id of slideControlIds){const e=$(id);if(e&&o[id]!==undefined){if(e.type==='checkbox')e.checked=!!o[id];else e.value=o[id]}}if($('slideMode'))$('slideMode').value=o.mode||'image'}
+function saveSlides(){if(!isLichtval)return;try{localStorage.setItem(slideStore,JSON.stringify({slides:slideData,format:slideFormat,index:slideIndex}))}catch(e){}}
+function captureSlide(){if(!isLichtval||!slideData.length)return;slideData[slideIndex]=readSlide();saveSlides()}
+function selectSlide(i){if(!isLichtval)return;slideIndex=Math.max(0,Math.min(slideData.length-1,i));writeSlide(slideData[slideIndex]);refreshSlideUI();saveSlides();render(0)}
+function refreshSlideUI(){
+ if(!isLichtval)return;
+ const box=$('slideButtons');if(box){box.replaceChildren();slideData.forEach((_,i)=>{const b=document.createElement('button');b.type='button';b.textContent=String(i+1).padStart(2,'0');b.className=i===slideIndex?'primary':'';b.setAttribute('aria-label','Slide '+(i+1));b.onclick=()=>{stop();captureSlide();selectSlide(i)};box.appendChild(b)})}
+ $('slidePosition').textContent='Slide '+(slideIndex+1)+' van '+slideData.length;
+ $('removeSlide').disabled=slideData.length===1;
+ $('previousSlide').disabled=slideIndex===0;
+ $('nextSlide').disabled=slideIndex===slideData.length-1;
+ const reel=slideFormat==='reel';$('outputLabel').textContent=reel?'REEL · 1080 × 1920':'CARROUSEL · 1080 × 1350';$('carouselControls').hidden=reel;
+ $('slideModeField').hidden=reel;
+ const video=reel||$('slideMode').value==='video';
+ $('exportImage').hidden=reel||video;
+ $('exportAllImages').hidden=reel;
+ $('export').hidden=!video;
+ $('play').disabled=!video;
+ $('stop').disabled=!video;
+ $('message').previousElementSibling.textContent=video?'Tekst aan het einde van de animatie (mag leeg blijven)':'Tekst op deze slide (mag leeg blijven)';
+ $('exportAllImages').textContent='↓ Exporteer alle '+slideData.length+' slides als PNG';
+}
+function setFormat(format){slideFormat=format==='reel'?'reel':'carousel';c.height=slideFormat==='reel'?1920:1350;H=c.height;refreshSlideUI();saveSlides();render(0)}
+function exportPng(i){const original=slideIndex;if(i!==undefined){writeSlide(slideData[i]);slideIndex=i}render(0);const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='ODR-De-Lichtval-slide-'+String(slideIndex+1).padStart(2,'0')+'.png';document.body.appendChild(a);a.click();a.remove();if(i!==undefined){slideIndex=original;writeSlide(slideData[original]);render(0)}}
+function initSlides(){
+ if(!isLichtval)return;
+ const base=readSlide();let saved=null;try{saved=JSON.parse(localStorage.getItem(slideStore))}catch(e){}
+ if(saved&&Array.isArray(saved.slides)&&saved.slides.length)slideData=saved.slides.slice(0,20).map(o=>({...base,...o}));
+ else slideData=Array.from({length:5},(_,i)=>({...base,mode:'image',message:i===0?base.message:''}));
+ slideIndex=Math.max(0,Math.min(slideData.length-1,Number(saved?.index)||0));
+ slideFormat=saved?.format==='reel'?'reel':'carousel';
+ $('outputFormat').value=slideFormat;writeSlide(slideData[slideIndex]);
+ $('outputFormat').addEventListener('change',e=>{stop();captureSlide();setFormat(e.target.value)});
+ $('slideMode').addEventListener('change',()=>{stop();captureSlide();refreshSlideUI();render(0)});
+ $('previousSlide').onclick=()=>{stop();captureSlide();selectSlide(slideIndex-1)};
+ $('nextSlide').onclick=()=>{stop();captureSlide();selectSlide(slideIndex+1)};
+ $('addSlide').onclick=()=>{stop();captureSlide();if(slideData.length>=20){$('status').textContent='Maximaal 20 slides.';return}slideData.splice(slideIndex+1,0,{...slideData[slideIndex],message:''});selectSlide(slideIndex+1)};
+ $('removeSlide').onclick=()=>{stop();if(slideData.length<=1)return;slideData.splice(slideIndex,1);selectSlide(Math.min(slideIndex,slideData.length-1))};
+ $('exportImage').onclick=()=>{captureSlide();exportPng()};
+ $('exportAllImages').onclick=()=>{captureSlide();for(let i=0;i<slideData.length;i++)setTimeout(()=>exportPng(i),i*350);$('status').textContent='De PNG-bestanden worden afzonderlijk gedownload. Sta meerdere downloads toe als je browser daarom vraagt.'};
+ setFormat(slideFormat);
+}
+
 function val(id){return Number($(id).value)}
 function ease(x){x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)}
 function wrap(text,max,font){g.font=font+'px "DM Sans",sans-serif';let out=[],line='';for(const word of text.split(/\s+/)){const next=line?line+' '+word:word;if(g.measureText(next).width>max&&line){out.push(line);line=word}else line=next}if(line)out.push(line);return out}
@@ -119,7 +169,7 @@ function brownPlane(t){
 }
 function drawText(t){
  const content=$('message').value.trim();if(!content)return;
- const dur=val('duration'),on=Math.max(0,dur-4.1),alpha=ease((t-on)/1.1);
+ const dur=val('duration'),still=isLichtval&&slideFormat==='carousel'&&$('slideMode').value==='image',on=Math.max(0,dur-4.1),alpha=still?1:ease((t-on)/1.1);
  if(alpha<=0)return;
  g.save();g.globalAlpha=alpha;g.textAlign='center';g.textBaseline='middle';g.fillStyle='#f2e1cf';
  let font=49,rows=wrap(content,850,font);
@@ -139,7 +189,7 @@ function render(t){
  if($('photoOrder').value==='front')imageLayer();
  drawText(t);
  if($('signature').checked){g.fillStyle='#c7ad97';g.font='26px "DM Sans",sans-serif';g.textAlign='left';g.fillText('onder de ruis.',94,H-105)}
- $('counter').textContent=Math.min(val('duration'),t).toFixed(1)+' / '+val('duration')+' sec'
+ $('counter').textContent=isLichtval&&slideFormat==='carousel'?'SLIDE '+(slideIndex+1)+' / '+slideData.length+' · '+($('slideMode').value==='image'?'PNG':'VIDEO'):Math.min(val('duration'),t).toFixed(1)+' / '+val('duration')+' sec'
 }
 function stop(){playing=false;cancelAnimationFrame(raf);$('play').disabled=false}
 function preview(){
@@ -149,7 +199,7 @@ function preview(){
 }
 function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),45000)}
 async function exportVideo(){
- if(recording)return;stop();
+ if(recording)return;stop();if(isLichtval)captureSlide();
  if(!c.captureStream||!window.MediaRecorder){$('status').textContent='Video-export wordt niet ondersteund in deze browser.';return}
  const types=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm'];
  const mime=types.find(x=>MediaRecorder.isTypeSupported(x));if(!mime){$('status').textContent='Geen ondersteund videoformaat.';return}
@@ -159,7 +209,7 @@ async function exportVideo(){
  catch(e){stream.getTracks().forEach(t=>t.stop());recording=false;$('export').disabled=false;$('status').textContent=e.message;return}
  recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
  recorder.onstop=()=>{stream.getTracks().forEach(t=>t.stop());const ext=mime.includes('mp4')?'mp4':'webm';
- if(chunks.length)download(new Blob(chunks,{type:mime}),'ODR-'+kind+'.'+ext);
+ if(chunks.length)download(new Blob(chunks,{type:mime}),'ODR-'+kind+(isLichtval&&slideFormat==='carousel'?'-slide-'+String(slideIndex+1).padStart(2,'0'):'')+'.'+ext);
  recording=false;$('export').disabled=false;$('status').textContent='Video opgeslagen.';render(0)};
  recorder.start(1000);const t0=performance.now();
  const tick=now=>{if(!recording)return;const t=Math.min(val('duration'),(now-t0)/1000);render(t);
@@ -176,6 +226,6 @@ $('photoFile').addEventListener('change',()=>{
 $('photoClear').onclick=()=>{photo=null;if(photoURL)URL.revokeObjectURL(photoURL);photoURL=null;$('photoFile').value='';$('photoOn').checked=false;render(0)};
 $('play').onclick=preview;$('stop').onclick=()=>{stop();render(0)};
 $('export').onclick=exportVideo;
-for(const el of document.querySelectorAll('input,select,textarea')){const update=()=>{if(!recording)render(playing?(performance.now()-start)/1000:0)};el.addEventListener('input',update);el.addEventListener('change',update)}
-document.fonts.ready.then(()=>render(0));render(0);
+for(const el of document.querySelectorAll('input,select,textarea')){const update=()=>{if(isLichtval&&slideControlIds.includes(el.id))captureSlide();if(!recording)render(playing?(performance.now()-start)/1000:0)};el.addEventListener('input',update);el.addEventListener('change',update)}
+initSlides();document.fonts.ready.then(()=>render(0));render(0);
 })();
