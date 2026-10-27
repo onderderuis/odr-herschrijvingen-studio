@@ -12,7 +12,7 @@ function imageLayer(){
  const x=(W-w)*val('photoX')/100,y=(H-h)*val('photoY')/100;
  g.save();g.globalAlpha=val('photoOpacity')/100;g.globalCompositeOperation=$('photoBlend').value;
  const half=$('photoHalf').value;
- if(half!=='all'){g.beginPath();g.rect(half==='left'?0:W/2,0,W/2,H);g.clip()}
+ if(half!=='all'&&!$('planeOn').checked){g.beginPath();g.rect(half==='left'?0:W/2,0,W/2,H);g.clip()}
  g.drawImage(photo,x,y,w,h);g.restore()
 }
 function drawLines(t){
@@ -123,7 +123,7 @@ function drawText(t){
  g.restore()
 }
 function render(t){
- g.fillStyle=$('planeOn')?.checked?'#493126':'#291b15';g.fillRect(0,0,W,H);
+ g.fillStyle=$('planeOn')?.checked?'#70513e':'#291b15';g.fillRect(0,0,W,H);
  if($('photoOrder').value==='back')imageLayer();
  if(kind==='beweging')drawLines(t);
  if(kind==='punten')drawPoints(t);
@@ -169,6 +169,6 @@ $('photoFile').addEventListener('change',()=>{
 $('photoClear').onclick=()=>{photo=null;if(photoURL)URL.revokeObjectURL(photoURL);photoURL=null;$('photoFile').value='';$('photoOn').checked=false;render(0)};
 $('play').onclick=preview;$('stop').onclick=()=>{stop();render(0)};
 $('export').onclick=exportVideo;
-for(const el of document.querySelectorAll('input,select,textarea'))el.addEventListener('input',()=>{if(!playing&&!recording)render(0)});
+for(const el of document.querySelectorAll('input,select,textarea')){const update=()=>{if(!recording)render(playing?(performance.now()-start)/1000:0)};el.addEventListener('input',update);el.addEventListener('change',update)}
 document.fonts.ready.then(()=>render(0));render(0);
 })();
