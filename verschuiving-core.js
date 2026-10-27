@@ -2,61 +2,57 @@
 const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d'),W=1080,H=cv.height,mode=window.ODR_MODE;
 const palette={beige:{bg:'#e6d7c5',ink:'#4b352a',sub:'#765b48',faint:'#b9a18e'},brown:{bg:'#291b15',ink:'#e9d7c5',sub:'#c7ad97',faint:'#7e6659'}};
 const key='odr-'+mode+'-v1';let slides=window.ODR_DEFAULT.slice(),index=0,raf=0,playing=false,exporting=false;
-try{let saved=JSON.parse(localStorage.getItem(key));if(saved&&Array.isArray(saved.slides)&&saved.slides.length&&mode!=='laag')slides=saved.slides; if(saved&&mode==='laag')for(let id of ['upper','lower','question','duration','fadeAt'])if($(id)&&typeof saved[id]==='string')$(id).value=saved[id];if(saved)for(let id of ['palette','size','signature','wirwarX','wirwarY','wirwarScale','wirwarChaos'])if($(id)&&saved[id]!==undefined){if($(id).type==='checkbox')$(id).checked=!!saved[id];else $(id).value=saved[id]}}catch(e){}
-function save(){let o={slides};for(let id of ['palette','size','signature','wirwarX','wirwarY','wirwarScale','wirwarChaos','upper','lower','question','duration','fadeAt'])if($(id))o[id]=$(id).type==='checkbox'?$(id).checked:$(id).value;try{localStorage.setItem(key,JSON.stringify(o))}catch(e){}}
+try{let saved=JSON.parse(localStorage.getItem(key));if(saved&&Array.isArray(saved.slides)&&saved.slides.length&&mode!=='laag')slides=saved.slides; if(saved&&mode==='laag')for(let id of ['upper','lower','question','duration','fadeAt'])if($(id)&&typeof saved[id]==='string')$(id).value=saved[id];if(saved)for(let id of ['palette','size','signature','wirwarX','wirwarY','wirwarScale','wirwarChaos','wirwarStyle','wirwarCount','wirwarDirection','wirwarSpread','wirwarBend','wirwarOutliers','wirwarVariation'])if($(id)&&saved[id]!==undefined){if($(id).type==='checkbox')$(id).checked=!!saved[id];else $(id).value=saved[id]}}catch(e){}
+function save(){let o={slides};for(let id of ['palette','size','signature','wirwarX','wirwarY','wirwarScale','wirwarChaos','wirwarStyle','wirwarCount','wirwarDirection','wirwarSpread','wirwarBend','wirwarOutliers','wirwarVariation','upper','lower','question','duration','fadeAt'])if($(id))o[id]=$(id).type==='checkbox'?$(id).checked:$(id).value;try{localStorage.setItem(key,JSON.stringify(o))}catch(e){}}
 function wrap(text,max,font){ctx.font='400 '+font+'px "DM Sans",sans-serif';let out=[],row='';for(let word of text.split(/\s+/)){let next=row?row+' '+word:word;if(ctx.measureText(next).width>max&&row){out.push(row);row=word}else row=next}if(row)out.push(row);return out}
 function label(text,y,p,opacity=1){if(!text)return;let font=+($('size').value||50),rows=wrap(text,850,font);while(rows.length*font*1.48>340&&font>28){font-=2;rows=wrap(text,850,font)}ctx.save();ctx.globalAlpha=opacity;ctx.fillStyle=p.ink;ctx.font='400 '+font+'px "DM Sans",sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';rows.forEach((row,j)=>ctx.fillText(row,115,y+(j-(rows.length-1)/2)*font*1.48));ctx.restore()}
 function signature(p){if($('signature').checked){ctx.fillStyle=p.sub;ctx.font='400 23px "DM Sans",sans-serif';ctx.textAlign='left';ctx.fillText('onder de ruis.',112,H-95)}}
 function drawWirwar(i,p,n){
- const x=Number($('wirwarX')?.value??50)/100*W;
- const y=Number($('wirwarY')?.value??37)/100*H;
- const scale=Number($('wirwarScale')?.value??100)/100;
- const chaos=Number($('wirwarChaos')?.value??65)/100;
+ const read=(id,fallback)=>Number($(id)?.value??fallback);
+ const x=read('wirwarX',50)/100*W,y=read('wirwarY',37)/100*H;
+ const scale=read('wirwarScale',100)/100;
+ const chaos=read('wirwarChaos',65)/100;
+ const count=read('wirwarCount',11),spread=read('wirwarSpread',60)/100;
+ const bend=read('wirwarBend',65)/100,outs=read('wirwarOutliers',50)/100;
+ const angle=(read('wirwarDirection',0)-90)*Math.PI/180;
+ const variation=read('wirwarVariation',1);
+ const style=$('wirwarStyle')?.value||'free';
  const progress=i/Math.max(1,n-1);
- ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
+ const rand=(k,salt=0)=>{let a=Math.sin((k+1)*127.1+salt*311.7+variation*73.19)*43758.5453;return a-Math.floor(a)};
+ ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.scale(scale,scale);
  ctx.lineCap='round';ctx.lineJoin='round';
- // Open, asymmetrische slingerbanen: ieder spoor heeft een eigen oorsprong,
- // richting, uitschieter en lengte. Geen begrenzende vierkante contour.
- for(let k=0;k<11;k++){
-  const seed=k*2.3999632297;
-  const length=190+((k*173)%570)+(k%4===0?240*chaos:0);
-  const direction=seed+(k%3===0?.7:-.15);
-  const startX=Math.sin(seed*1.71)*95, startY=Math.cos(seed*.83)*100;
-  const bend=75+chaos*185;
-  const tangentX=Math.cos(direction),tangentY=Math.sin(direction);
-  const normalX=-tangentY,normalY=tangentX;
-  const reach=k%4===0?1+chaos*.95:1;
-  const steps=125;
+ for(let k=0;k<count;k++){
+  const seed=rand(k,1)*Math.PI*2;
+  const direction=seed+(.5-rand(k,2))*spread*3;
+  const tx=Math.cos(direction),ty=Math.sin(direction),nx=-ty,ny=tx;
+  const ox=(rand(k,3)-.5)*(40+spread*260);
+  const oy=(rand(k,4)-.5)*(40+spread*260);
+  const length=(160+rand(k,5)*510)*(1+outs*(rand(k,6)>.74?2.4:0));
+  const turn=(rand(k,7)-.5)*2;
+  const freq=1.1+rand(k,8)*3.5;
   ctx.beginPath();
-  for(let j=0;j<=steps;j++){
-   const t=j/steps;
-   const drift=length*t*reach;
-   const ripple=bend*(Math.sin(t*Math.PI*(1.5+(k%4)*.6)+seed)-Math.sin(seed))*.52;
-   const wiggle=chaos*55*Math.sin(t*16.5+seed*2.2)*Math.sin(Math.PI*t);
-   const curl=(k%3===0?1:-1)*chaos*130*t*t;
-   const px=startX+tangentX*drift+normalX*(ripple+wiggle+curl);
-   const py=startY+tangentY*drift+normalY*(ripple+wiggle+curl);
+  for(let j=0;j<=160;j++){
+   const t=j/160;
+   let px,py;
+   if(style==='spiral'){
+    const r=45+t*length*.75;
+    const a=seed+t*(2.2+bend*9)*(turn<0?-1:1);
+    px=ox+Math.cos(a)*r;py=oy+Math.sin(a)*r;
+   }else{
+    const drift=t*length;
+    const soft=(Math.sin(t*Math.PI*freq+seed)-Math.sin(seed))*bend*145;
+    const wild=Math.sin(t*(10+chaos*23)+seed*2)*chaos*bend*105*t;
+    const swoop=turn*bend*280*t*t;
+    const branch=style==='wild'?Math.sin(t*23+seed*4)*chaos*135*t:0;
+    const curve=style==='flow'?soft*.65+swoop*.55:soft+wild+swoop+branch;
+    px=ox+tx*drift+nx*curve;py=oy+ty*drift+ny*curve;
+   }
    if(j===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)
   }
-  const highlighted=k===2||k===7;
+  const highlighted=k===2||k===Math.floor(count*.65);
   ctx.strokeStyle=highlighted?p.ink:p.sub;
-  ctx.globalAlpha=highlighted?.3+.55*progress:.53-.34*progress;
-  ctx.lineWidth=highlighted?3.5:2.2+(k%3)*.35;
-  ctx.stroke();
- }
- // Enkele lange lijnen steken uit de kern en doorbreken bewust de compositie.
- for(let k=0;k<3;k++){
-  const a=-1.2+k*2.25,extent=(610+k*160)*(0.65+chaos*.65);
-  ctx.beginPath();
-  for(let j=0;j<=110;j++){
-   const t=j/110;
-   const px=Math.cos(a)*extent*(t-.13)+Math.sin(a)*90*Math.sin(t*8+k);
-   const py=Math.sin(a)*extent*(t-.13)+Math.cos(a)*110*Math.sin(t*5+k*.8);
-   if(j===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)
-  }
-  ctx.strokeStyle=k===1?p.ink:p.sub;
-  ctx.globalAlpha=k===1?.2+.53*progress:.27-.12*progress;
-  ctx.lineWidth=k===1?3.2:2;
+  ctx.globalAlpha=highlighted?.26+.63*progress:.48-.27*progress;
+  ctx.lineWidth=highlighted?3.6:1.8+rand(k,9)*1.6;
   ctx.stroke()
  }
  ctx.restore()
