@@ -46,7 +46,53 @@ function drawPunt(i,p,n){
  ctx.beginPath();ctx.arc(ox,oy,8,0,Math.PI*2);ctx.fill();
  ctx.restore()
 }
-function drawSlide(i){const p=palette[$('palette').value];ctx.fillStyle=p.bg;ctx.fillRect(0,0,W,H);if(mode==='wirwar')drawWirwar(i,p,slides.length);else drawPunt(i,p,slides.length);label(slides[i]||'',1005,p);signature(p);$('counter').textContent=(i+1)+' / '+slides.length}
+
+let photoImage=null,photoObjectUrl=null;
+function photoDraw(){
+ const enabled=$('photoEnabled');if(!enabled||!enabled.checked||!photoImage)return;
+ const opacity=Number($('photoOpacity').value)/100;
+ const zoom=Number($('photoZoom').value)/100;
+ const px=Number($('photoX').value)/100,py=Number($('photoY').value)/100;
+ const base=Math.max(W/photoImage.width,H/photoImage.height)*zoom;
+ const w=photoImage.width*base,h=photoImage.height*base;
+ const x=(W-w)*px,y=(H-h)*py;
+ ctx.save();
+ ctx.globalAlpha=opacity;
+ ctx.globalCompositeOperation=$('photoBlend').value;
+ const mask=$('photoMask').value;
+ if(mask!=='full'){
+  ctx.beginPath();
+  if(mask==='left')ctx.rect(0,0,W/2,H);
+  if(mask==='right')ctx.rect(W/2,0,W/2,H);
+  ctx.clip();
+ }
+ ctx.drawImage(photoImage,x,y,w,h);
+ ctx.restore();
+}
+function initPhoto(){
+ const file=$('photoFile');if(!file)return;
+ file.addEventListener('change',()=>{
+  const f=file.files&&file.files[0];if(!f)return;
+  if(!f.type.startsWith('image/')){$('status').textContent='Selecteer een foto.';return}
+  const url=URL.createObjectURL(f),img=new Image();
+  img.onload=()=>{
+   if(photoObjectUrl)URL.revokeObjectURL(photoObjectUrl);
+   photoObjectUrl=url;photoImage=img;
+   $('photoEnabled').checked=true;
+   $('status').textContent='Foto toegevoegd. De foto blijft lokaal in je browser.';
+   render();
+  };
+  img.onerror=()=>{URL.revokeObjectURL(url);$('status').textContent='De foto kon niet worden geladen.'};
+  img.src=url;
+ });
+ $('photoRemove').addEventListener('click',()=>{
+  photoImage=null;
+  if(photoObjectUrl)URL.revokeObjectURL(photoObjectUrl);
+  photoObjectUrl=null;file.value='';$('photoEnabled').checked=false;
+  $('status').textContent='Foto verwijderd.';render();
+ });
+}
+function drawSlide(i){const p=palette[$('palette').value];ctx.fillStyle=p.bg;ctx.fillRect(0,0,W,H);if(mode==='wirwar')drawWirwar(i,p,slides.length);else drawPunt(i,p,slides.length);photoDraw();label(slides[i]||'',1005,p);signature(p);$('counter').textContent=(i+1)+' / '+slides.length}
 function chips(){const box=$('slides');box.replaceChildren();slides.forEach((_,i)=>{let b=document.createElement('button');b.textContent=String(i+1).padStart(2,'0');b.className=i===index?'activeButton':'';b.onclick=()=>select(i);box.appendChild(b)})}
 function select(i){index=Math.max(0,Math.min(slides.length-1,i));$('slideText').value=slides[index];chips();$('prev').disabled=index===0;$('next').disabled=index===slides.length-1;$('remove').disabled=slides.length===1;drawSlide(index);save()}
 function words(id){return $(id).value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,14)}
@@ -93,6 +139,7 @@ function drawLayer(t){
  top.forEach((w,i)=>{let [x,y]=topPositions[i];ctx.globalAlpha=.9*(1-fade);ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
  bottom.forEach((w,i)=>{let [x,y]=bottomPositions[i];ctx.globalAlpha=.96*fade;ctx.fillStyle=p.ink;ctx.fillText(w,x,y)});
  ctx.globalAlpha=1;
+ photoDraw();
  let question=$('question').value.trim();
  if(t>=questionStart&&question){
   const q=smooth((t-questionStart)/.85);
@@ -107,6 +154,7 @@ function download(blob,name){let url=URL.createObjectURL(blob),a=document.create
 const blob=()=>new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(Error('PNG kon niet worden gemaakt')),'image/png'));
 function crc32(a){let c=0xffffffff;for(let b of a){c^=b;for(let i=0;i<8;i++)c=(c>>>1)^((c&1)?0xedb88320:0)}return(c^0xffffffff)>>>0}
 function zip(files){let chunks=[],central=[],offset=0,enc=new TextEncoder();for(let f of files){let name=enc.encode(f.name),data=f.data,crc=crc32(data),local=new Uint8Array(30+name.length),v=new DataView(local.buffer);v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint32(14,crc,true);v.setUint32(18,data.length,true);v.setUint32(22,data.length,true);v.setUint16(26,name.length,true);local.set(name,30);chunks.push(local,data);let c=new Uint8Array(46+name.length),w=new DataView(c.buffer);w.setUint32(0,0x02014b50,true);w.setUint16(4,20,true);w.setUint16(6,20,true);w.setUint32(16,crc,true);w.setUint32(20,data.length,true);w.setUint32(24,data.length,true);w.setUint16(28,name.length,true);w.setUint32(42,offset,true);c.set(name,46);central.push(c);offset+=local.length+data.length}let start=offset;for(let c of central){chunks.push(c);offset+=c.length}let end=new Uint8Array(22),e=new DataView(end.buffer);e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,offset-start,true);e.setUint32(16,start,true);chunks.push(end);return new Blob(chunks,{type:'application/zip'})}
+initPhoto();
 if(mode!=='laag'){
 $('slideText').oninput=()=>{slides[index]=$('slideText').value;drawSlide(index);save()};
 $('prev').onclick=()=>select(index-1);$('next').onclick=()=>select(index+1);
