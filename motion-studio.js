@@ -29,7 +29,7 @@ function refreshSlideUI(){
  $('play').disabled=!video;
  $('stop').disabled=!video;
  $('message').previousElementSibling.textContent=video?'Tekst in deze animatie (mag leeg blijven)':'Tekst op deze slide (mag leeg blijven)';
- $('textTiming').hidden=!video;$('textStart').max=$('duration').value;if(+$('textStart').value>+$('duration').value)$('textStart').value=$('duration').value;updateTextTimingLabel();
+ $('textTiming').hidden=false;$('textTimingHint').textContent=video?'Bepaal per slide wanneer de tekst verschijnt. Speel de animatie af om het resultaat te zien.':'De teksttiming staat klaar. Kies bovenaan bij ‘Deze slide’ voor ‘Bewegende slide (video)’ om het verschijnen van de tekst in de animatie te zien. Op een PNG staat de tekst direct in beeld.';$('textStart').max=$('duration').value;if(+$('textStart').value>+$('duration').value)$('textStart').value=$('duration').value;updateTextTimingLabel();
  $('exportAllImages').textContent='↓ Exporteer alle '+slideData.length+' slides als PNG';
 }
 function updateTextTimingLabel(){$('textStartValue').textContent=Number($('textStart').value).toLocaleString('nl-NL')+' sec';$('textFadeValue').textContent=Number($('textFade').value).toLocaleString('nl-NL')+' sec'}
