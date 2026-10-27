@@ -2,15 +2,65 @@
 const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d'),W=1080,H=cv.height,mode=window.ODR_MODE;
 const palette={beige:{bg:'#e6d7c5',ink:'#4b352a',sub:'#765b48',faint:'#b9a18e'},brown:{bg:'#291b15',ink:'#e9d7c5',sub:'#c7ad97',faint:'#7e6659'}};
 const key='odr-'+mode+'-v1';let slides=window.ODR_DEFAULT.slice(),index=0,raf=0,playing=false,exporting=false;
-try{let saved=JSON.parse(localStorage.getItem(key));if(saved&&Array.isArray(saved.slides)&&saved.slides.length&&mode!=='laag')slides=saved.slides; if(saved&&mode==='laag')for(let id of ['upper','lower','question','duration','fadeAt'])if($(id)&&typeof saved[id]==='string')$(id).value=saved[id];if(saved)for(let id of ['palette','size','signature'])if($(id)&&saved[id]!==undefined){if($(id).type==='checkbox')$(id).checked=!!saved[id];else $(id).value=saved[id]}}catch(e){}
-function save(){let o={slides};for(let id of ['palette','size','signature','upper','lower','question','duration','fadeAt'])if($(id))o[id]=$(id).type==='checkbox'?$(id).checked:$(id).value;try{localStorage.setItem(key,JSON.stringify(o))}catch(e){}}
+try{let saved=JSON.parse(localStorage.getItem(key));if(saved&&Array.isArray(saved.slides)&&saved.slides.length&&mode!=='laag')slides=saved.slides; if(saved&&mode==='laag')for(let id of ['upper','lower','question','duration','fadeAt'])if($(id)&&typeof saved[id]==='string')$(id).value=saved[id];if(saved)for(let id of ['palette','size','signature','wirwarX','wirwarY','wirwarScale','wirwarChaos'])if($(id)&&saved[id]!==undefined){if($(id).type==='checkbox')$(id).checked=!!saved[id];else $(id).value=saved[id]}}catch(e){}
+function save(){let o={slides};for(let id of ['palette','size','signature','wirwarX','wirwarY','wirwarScale','wirwarChaos','upper','lower','question','duration','fadeAt'])if($(id))o[id]=$(id).type==='checkbox'?$(id).checked:$(id).value;try{localStorage.setItem(key,JSON.stringify(o))}catch(e){}}
 function wrap(text,max,font){ctx.font='400 '+font+'px "DM Sans",sans-serif';let out=[],row='';for(let word of text.split(/\s+/)){let next=row?row+' '+word:word;if(ctx.measureText(next).width>max&&row){out.push(row);row=word}else row=next}if(row)out.push(row);return out}
 function label(text,y,p,opacity=1){if(!text)return;let font=+($('size').value||50),rows=wrap(text,850,font);while(rows.length*font*1.48>340&&font>28){font-=2;rows=wrap(text,850,font)}ctx.save();ctx.globalAlpha=opacity;ctx.fillStyle=p.ink;ctx.font='400 '+font+'px "DM Sans",sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';rows.forEach((row,j)=>ctx.fillText(row,115,y+(j-(rows.length-1)/2)*font*1.48));ctx.restore()}
 function signature(p){if($('signature').checked){ctx.fillStyle=p.sub;ctx.font='400 23px "DM Sans",sans-serif';ctx.textAlign='left';ctx.fillText('onder de ruis.',112,H-95)}}
-function linePath(seed,phase=0){let points=[];for(let j=0;j<=140;j++){let t=j/140*Math.PI*2.8;let x=540+Math.sin(t*1.7+seed*1.19)*200+Math.cos(t*3.3+seed)*65;let y=470+Math.cos(t*1.23+seed*.67)*155+Math.sin(t*2.6+seed)*65;points.push([x,y])}return points}
-const lines=Array.from({length:8},(_,i)=>linePath(i+1));
-function drawWirwar(i,p,n){ctx.save();ctx.lineWidth=3.1;ctx.lineCap='round';ctx.lineJoin='round';const focus=Math.floor(i/Math.max(1,n-1)*5);
-lines.forEach((pts,k)=>{let highlighted=k===2||k===5;ctx.strokeStyle=highlighted?p.ink:p.sub;ctx.globalAlpha=highlighted?.25+(.72*i/Math.max(1,n-1)):.46-.36*i/Math.max(1,n-1);ctx.beginPath();pts.forEach(([x,y],j)=>j?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke()});ctx.restore()}
+function drawWirwar(i,p,n){
+ const x=Number($('wirwarX')?.value??50)/100*W;
+ const y=Number($('wirwarY')?.value??37)/100*H;
+ const scale=Number($('wirwarScale')?.value??100)/100;
+ const chaos=Number($('wirwarChaos')?.value??65)/100;
+ const progress=i/Math.max(1,n-1);
+ ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
+ ctx.lineCap='round';ctx.lineJoin='round';
+ // Open, asymmetrische slingerbanen: ieder spoor heeft een eigen oorsprong,
+ // richting, uitschieter en lengte. Geen begrenzende vierkante contour.
+ for(let k=0;k<11;k++){
+  const seed=k*2.3999632297;
+  const length=190+((k*173)%570)+(k%4===0?240*chaos:0);
+  const direction=seed+(k%3===0?.7:-.15);
+  const startX=Math.sin(seed*1.71)*95, startY=Math.cos(seed*.83)*100;
+  const bend=75+chaos*185;
+  const tangentX=Math.cos(direction),tangentY=Math.sin(direction);
+  const normalX=-tangentY,normalY=tangentX;
+  const reach=k%4===0?1+chaos*.95:1;
+  const steps=125;
+  ctx.beginPath();
+  for(let j=0;j<=steps;j++){
+   const t=j/steps;
+   const drift=length*t*reach;
+   const ripple=bend*(Math.sin(t*Math.PI*(1.5+(k%4)*.6)+seed)-Math.sin(seed))*.52;
+   const wiggle=chaos*55*Math.sin(t*16.5+seed*2.2)*Math.sin(Math.PI*t);
+   const curl=(k%3===0?1:-1)*chaos*130*t*t;
+   const px=startX+tangentX*drift+normalX*(ripple+wiggle+curl);
+   const py=startY+tangentY*drift+normalY*(ripple+wiggle+curl);
+   if(j===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)
+  }
+  const highlighted=k===2||k===7;
+  ctx.strokeStyle=highlighted?p.ink:p.sub;
+  ctx.globalAlpha=highlighted?.3+.55*progress:.53-.34*progress;
+  ctx.lineWidth=highlighted?3.5:2.2+(k%3)*.35;
+  ctx.stroke();
+ }
+ // Enkele lange lijnen steken uit de kern en doorbreken bewust de compositie.
+ for(let k=0;k<3;k++){
+  const a=-1.2+k*2.25,extent=(610+k*160)*(0.65+chaos*.65);
+  ctx.beginPath();
+  for(let j=0;j<=110;j++){
+   const t=j/110;
+   const px=Math.cos(a)*extent*(t-.13)+Math.sin(a)*90*Math.sin(t*8+k);
+   const py=Math.sin(a)*extent*(t-.13)+Math.cos(a)*110*Math.sin(t*5+k*.8);
+   if(j===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)
+  }
+  ctx.strokeStyle=k===1?p.ink:p.sub;
+  ctx.globalAlpha=k===1?.2+.53*progress:.27-.12*progress;
+  ctx.lineWidth=k===1?3.2:2;
+  ctx.stroke()
+ }
+ ctx.restore()
+}
 function drawPunt(i,p,n){
  const stage=Math.min(4,Math.floor(i/Math.max(1,n-1)*4+.001));
  const ox=190,oy=445;
@@ -169,6 +219,15 @@ $('play').onclick=()=>{stop();if(exporting)return;playing=true;$('play').disable
 $('export').onclick=async()=>{if(exporting)return;stop();if(!cv.captureStream||!window.MediaRecorder){$('status').textContent='Deze browser ondersteunt geen video-export.';return}let choices=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm'],mime=choices.find(x=>MediaRecorder.isTypeSupported(x));if(!mime){$('status').textContent='Geen ondersteund videoformaat.';return}exporting=true;$('export').disabled=true;let dur=+$('duration').value,stream=cv.captureStream(0),track=stream.getVideoTracks()[0],parts=[],recorder;try{recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:7000000})}catch(e){$('status').textContent=e.message;exporting=false;$('export').disabled=false;return}
 recorder.ondataavailable=e=>{if(e.data.size)parts.push(e.data)};recorder.onstop=()=>{stream.getTracks().forEach(t=>t.stop());let ext=mime.includes('mp4')?'mp4':'webm';if(parts.length)download(new Blob(parts,{type:mime}),'ODR-De-Zichtbare-Laag.'+ext);$('status').textContent='Video-export klaar.';exporting=false;$('export').disabled=false;drawLayer(0)};
 recorder.start();let frame=0,frames=dur*30;function next(){if(frame>frames){if(recorder.state!=='inactive')recorder.stop();return}drawLayer(frame/30);track.requestFrame?.();frame++;if(frame%30===0)$('status').textContent='Export '+Math.round(frame/frames*100)+'%';setTimeout(next,1000/30)}next()};
+}
+if(mode==='wirwar'){
+ let dragging=false;
+ cv.style.touchAction='none';cv.style.cursor='grab';
+ cv.addEventListener('pointerdown',e=>{dragging=true;cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';moveWirwar(e)});
+ cv.addEventListener('pointermove',e=>{if(dragging)moveWirwar(e)});
+ const done=()=>{dragging=false;cv.style.cursor='grab'};
+ cv.addEventListener('pointerup',done);cv.addEventListener('pointercancel',done);
+ function moveWirwar(e){const r=cv.getBoundingClientRect();$('wirwarX').value=Math.round(Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100)));$('wirwarY').value=Math.round(Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100)));save();render()}
 }
 for(let el of document.querySelectorAll('input,select,textarea'))el.addEventListener('input',()=>{save();if(!playing&&!exporting)render()});
 document.fonts.ready.then(render);render();
