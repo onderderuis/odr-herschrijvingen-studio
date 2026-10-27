@@ -129,7 +129,7 @@ function drawText(t){
 }
 function render(t){
  g.fillStyle=$('planeOn')?.checked?'#70513e':'#291b15';g.fillRect(0,0,W,H);
- const effectsOverPlane=$('effectPlaneOrder')?.value==='over';
+ const effectsOverPlane=$('lightOverPlane')?.checked || $('effectPlaneOrder')?.value==='over';
  if($('photoOrder').value==='back')imageLayer();
  if(effectsOverPlane)brownPlane(t);
  if(kind==='beweging')drawLines(t);
