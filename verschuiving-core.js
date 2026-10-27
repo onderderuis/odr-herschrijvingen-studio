@@ -2,13 +2,20 @@
 const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d'),W=1080,H=cv.height,mode=window.ODR_MODE;
 const palette={beige:{bg:'#e6d7c5',ink:'#4b352a',sub:'#765b48',faint:'#b9a18e'},brown:{bg:'#291b15',ink:'#e9d7c5',sub:'#c7ad97',faint:'#7e6659'}};
 const key='odr-'+mode+'-v1';let slides=window.ODR_DEFAULT.slice(),index=0,raf=0,playing=false,exporting=false;
-try{let saved=JSON.parse(localStorage.getItem(key));if(saved&&Array.isArray(saved.slides)&&saved.slides.length&&mode!=='laag')slides=saved.slides; if(saved&&mode==='laag')for(let id of ['upper','lower','question','duration','fadeAt'])if($(id)&&typeof saved[id]==='string')$(id).value=saved[id];if(saved)for(let id of ['palette','size','signature','wirwarX','wirwarY','wirwarScale','wirwarChaos','wirwarStyle','wirwarCount','wirwarDirection','wirwarSpread','wirwarBend','wirwarOutliers','wirwarVariation'])if($(id)&&saved[id]!==undefined){if($(id).type==='checkbox')$(id).checked=!!saved[id];else $(id).value=saved[id]}}catch(e){}
-function save(){let o={slides};for(let id of ['palette','size','signature','wirwarX','wirwarY','wirwarScale','wirwarChaos','wirwarStyle','wirwarCount','wirwarDirection','wirwarSpread','wirwarBend','wirwarOutliers','wirwarVariation','upper','lower','question','duration','fadeAt'])if($(id))o[id]=$(id).type==='checkbox'?$(id).checked:$(id).value;try{localStorage.setItem(key,JSON.stringify(o))}catch(e){}}
+const wirwarIds=["wirwarX","wirwarY","wirwarScale","wirwarChaos","wirwarStyle","wirwarCount","wirwarDirection","wirwarSpread","wirwarBend","wirwarOutliers","wirwarVariation"];
+let wirwarPerSlide=[];
+function readWirwarControls(){const o={};for(const id of wirwarIds)if($(id))o[id]=$(id).value;return o}
+function applyWirwarControls(values){if(!values)return;for(const id of wirwarIds)if($(id)&&values[id]!==undefined)$(id).value=values[id]}
+function ensureWirwarSlides(){if(mode!=='wirwar')return;const baseline=readWirwarControls();while(wirwarPerSlide.length<slides.length)wirwarPerSlide.push({...baseline});if(wirwarPerSlide.length>slides.length)wirwarPerSlide.length=slides.length}
+function captureWirwarSlide(){if(mode!=='wirwar')return;ensureWirwarSlides();wirwarPerSlide[index]=readWirwarControls()}
+try{let saved=JSON.parse(localStorage.getItem(key));if(saved&&Array.isArray(saved.slides)&&saved.slides.length&&mode!=='laag')slides=saved.slides; if(saved&&mode==='laag')for(let id of ['upper','lower','question','duration','fadeAt'])if($(id)&&typeof saved[id]==='string')$(id).value=saved[id];if(saved&&mode==='wirwar'&&Array.isArray(saved.wirwarPerSlide))wirwarPerSlide=saved.wirwarPerSlide.filter(v=>v&&typeof v==='object');if(saved)for(let id of ['palette','size','signature','wirwarX','wirwarY','wirwarScale','wirwarChaos','wirwarStyle','wirwarCount','wirwarDirection','wirwarSpread','wirwarBend','wirwarOutliers','wirwarVariation'])if($(id)&&saved[id]!==undefined){if($(id).type==='checkbox')$(id).checked=!!saved[id];else $(id).value=saved[id]}}catch(e){}
+function save(){let o={slides};if(mode==='wirwar'){ensureWirwarSlides();o.wirwarPerSlide=wirwarPerSlide}for(let id of ['palette','size','signature','wirwarX','wirwarY','wirwarScale','wirwarChaos','wirwarStyle','wirwarCount','wirwarDirection','wirwarSpread','wirwarBend','wirwarOutliers','wirwarVariation','upper','lower','question','duration','fadeAt'])if($(id))o[id]=$(id).type==='checkbox'?$(id).checked:$(id).value;try{localStorage.setItem(key,JSON.stringify(o))}catch(e){}}
 function wrap(text,max,font){ctx.font='400 '+font+'px "DM Sans",sans-serif';let out=[],row='';for(let word of text.split(/\s+/)){let next=row?row+' '+word:word;if(ctx.measureText(next).width>max&&row){out.push(row);row=word}else row=next}if(row)out.push(row);return out}
 function label(text,y,p,opacity=1){if(!text)return;let font=+($('size').value||50),rows=wrap(text,850,font);while(rows.length*font*1.48>340&&font>28){font-=2;rows=wrap(text,850,font)}ctx.save();ctx.globalAlpha=opacity;ctx.fillStyle=p.ink;ctx.font='400 '+font+'px "DM Sans",sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';rows.forEach((row,j)=>ctx.fillText(row,115,y+(j-(rows.length-1)/2)*font*1.48));ctx.restore()}
 function signature(p){if($('signature').checked){ctx.fillStyle=p.sub;ctx.font='400 23px "DM Sans",sans-serif';ctx.textAlign='left';ctx.fillText('onder de ruis.',112,H-95)}}
 function drawWirwar(i,p,n){
- const read=(id,fallback)=>Number($(id)?.value??fallback);
+ ensureWirwarSlides();const settings=wirwarPerSlide[i]||readWirwarControls();
+ const read=(id,fallback)=>Number(settings[id]??fallback);
  const x=read('wirwarX',50)/100*W,y=read('wirwarY',37)/100*H;
  const scale=read('wirwarScale',100)/100;
  const chaos=read('wirwarChaos',65)/100;
@@ -16,7 +23,7 @@ function drawWirwar(i,p,n){
  const bend=read('wirwarBend',65)/100,outs=read('wirwarOutliers',50)/100;
  const angle=(read('wirwarDirection',0)-90)*Math.PI/180;
  const variation=read('wirwarVariation',1);
- const style=$('wirwarStyle')?.value||'free';
+ const style=settings.wirwarStyle||'free';
  const progress=i/Math.max(1,n-1);
  const rand=(k,salt=0)=>{let a=Math.sin((k+1)*127.1+salt*311.7+variation*73.19)*43758.5453;return a-Math.floor(a)};
  ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.scale(scale,scale);
@@ -140,7 +147,7 @@ function initPhoto(){
 }
 function drawSlide(i){const p=palette[$('palette').value];ctx.fillStyle=p.bg;ctx.fillRect(0,0,W,H);if(mode==='wirwar')drawWirwar(i,p,slides.length);else drawPunt(i,p,slides.length);photoDraw();label(slides[i]||'',1005,p);signature(p);$('counter').textContent=(i+1)+' / '+slides.length}
 function chips(){const box=$('slides');box.replaceChildren();slides.forEach((_,i)=>{let b=document.createElement('button');b.textContent=String(i+1).padStart(2,'0');b.className=i===index?'activeButton':'';b.onclick=()=>select(i);box.appendChild(b)})}
-function select(i){index=Math.max(0,Math.min(slides.length-1,i));$('slideText').value=slides[index];chips();$('prev').disabled=index===0;$('next').disabled=index===slides.length-1;$('remove').disabled=slides.length===1;drawSlide(index);save()}
+function select(i){index=Math.max(0,Math.min(slides.length-1,i));if(mode==='wirwar'){ensureWirwarSlides();applyWirwarControls(wirwarPerSlide[index])}$('slideText').value=slides[index];chips();$('prev').disabled=index===0;$('next').disabled=index===slides.length-1;$('remove').disabled=slides.length===1;drawSlide(index);save()}
 function words(id){return $(id).value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,14)}
 function smooth(t){return Math.max(0,Math.min(1,t))**2*(3-2*Math.max(0,Math.min(1,t)))}
 function scatteredPositions(words,seed,font){
@@ -204,8 +211,8 @@ initPhoto();
 if(mode!=='laag'){
 $('slideText').oninput=()=>{slides[index]=$('slideText').value;drawSlide(index);save()};
 $('prev').onclick=()=>select(index-1);$('next').onclick=()=>select(index+1);
-$('add').onclick=()=>{if(slides.length>=20)return;$('status').textContent='Slide toegevoegd.';slides.splice(index+1,0,'');select(index+1)};
-$('remove').onclick=()=>{if(slides.length<=1)return;slides.splice(index,1);select(Math.min(index,slides.length-1))};
+$('add').onclick=()=>{if(slides.length>=20)return;$('status').textContent='Slide toegevoegd.';slides.splice(index+1,0,'');if(mode==='wirwar'){ensureWirwarSlides();wirwarPerSlide.splice(index+1,0,{...wirwarPerSlide[index]});wirwarPerSlide.length=slides.length}select(index+1)};
+$('remove').onclick=()=>{if(slides.length<=1)return;slides.splice(index,1);if(mode==='wirwar')wirwarPerSlide.splice(index,1);select(Math.min(index,slides.length-1))};
 $('one').onclick=async()=>{drawSlide(index);download(await blob(),'ODR-'+mode+'-'+String(index+1).padStart(2,'0')+'.png')};
 $('all').onclick=async()=>{let b=$('all');b.disabled=true;try{let files=[];for(let i=0;i<slides.length;i++){drawSlide(i);files.push({name:'ODR-'+mode+'-'+String(i+1).padStart(2,'0')+'.png',data:new Uint8Array(await(await blob()).arrayBuffer())});$('status').textContent='Export '+(i+1)+' / '+slides.length}download(zip(files),'ODR-'+mode+'-carrousel.zip');$('status').textContent='ZIP gedownload.'}catch(e){$('status').textContent=e.message}finally{b.disabled=false;drawSlide(index)}};select(0);
 }else{
@@ -223,8 +230,9 @@ if(mode==='wirwar'){
  cv.addEventListener('pointermove',e=>{if(dragging)moveWirwar(e)});
  const done=()=>{dragging=false;cv.style.cursor='grab'};
  cv.addEventListener('pointerup',done);cv.addEventListener('pointercancel',done);
- function moveWirwar(e){const r=cv.getBoundingClientRect();$('wirwarX').value=Math.round(Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100)));$('wirwarY').value=Math.round(Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100)));save();render()}
+ function moveWirwar(e){const r=cv.getBoundingClientRect();$('wirwarX').value=Math.round(Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100)));$('wirwarY').value=Math.round(Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100)));captureWirwarSlide();save();render()}
 }
-for(let el of document.querySelectorAll('input,select,textarea'))el.addEventListener('input',()=>{save();if(!playing&&!exporting)render()});
+for(let el of document.querySelectorAll('input,select,textarea'))el.addEventListener('input',()=>{if(mode==='wirwar'&&wirwarIds.includes(el.id))captureWirwarSlide();save();if(!playing&&!exporting)render()});
+if(mode==='wirwar'){ensureWirwarSlides();applyWirwarControls(wirwarPerSlide[index])}
 document.fonts.ready.then(render);render();
 })();
