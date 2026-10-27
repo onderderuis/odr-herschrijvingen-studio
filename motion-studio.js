@@ -129,12 +129,14 @@ function drawText(t){
 }
 function render(t){
  g.fillStyle=$('planeOn')?.checked?'#70513e':'#291b15';g.fillRect(0,0,W,H);
+ const effectsOverPlane=$('effectPlaneOrder')?.value==='over';
  if($('photoOrder').value==='back')imageLayer();
+ if(effectsOverPlane)brownPlane(t);
  if(kind==='beweging')drawLines(t);
  if(kind==='punten')drawPoints(t);
  if(kind==='lichtval')drawLight(t);
+ if(!effectsOverPlane)brownPlane(t);
  if($('photoOrder').value==='front')imageLayer();
- brownPlane(t);
  drawText(t);
  if($('signature').checked){g.fillStyle='#c7ad97';g.font='26px "DM Sans",sans-serif';g.textAlign='left';g.fillText('onder de ruis.',94,H-105)}
  $('counter').textContent=Math.min(val('duration'),t).toFixed(1)+' / '+val('duration')+' sec'
