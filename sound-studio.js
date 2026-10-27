@@ -148,7 +148,7 @@ async function play(exportDest=null){
   analyser.connect(ctx.destination);
   let output=analyser;
   let audioStream=null;
-  if(exportDest){const md=ctx.createMediaStreamDestination();analyser.connect(md);audioStream=md.stream}
+  if(exportDest){const md=ctx.createMediaStreamDestination();analyser.connect(md);audioStream=md.stream;recording=true}
   activeSources=schedule(ctx,output,ctx.currentTime+.12);
   playStart=performance.now()+120;
   $('play').disabled=true;
@@ -199,7 +199,7 @@ async function exportVideo(){
   status('Video met geluid gedownload.');
   videoStream.getTracks().forEach(t=>t.stop());
  }catch(e){stop();status('Video-export mislukt: '+e.message)}
- finally{$('video').disabled=false}
+ finally{recording=false;$('video').disabled=false}
 }
 function init(){
  const lib=$('library');
