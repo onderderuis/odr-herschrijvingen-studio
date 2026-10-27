@@ -87,8 +87,13 @@ function brownPlane(t){
  const alpha=val('planeOpacity')/100;
  const vertical=side==='left'||side==='right',extent=vertical?W:H,along=vertical?H:W;
  const center=extent*(side==='right'||side==='bottom'?1-coverage:coverage);
+ const topWidth=val('planeTop')/100,bottomWidth=val('planeBottom')/100;
+ const tilt=val('planeCurve')/100;
  function boundary(u){
-  if(shape==='straight')return center;
+  const blend=u*u*(3-2*u);
+  const taper=(topWidth*(1-blend)+bottomWidth*blend)-.5;
+  const slope=taper*extent*.85+tilt*extent*.3*(u-.5);
+  if(shape==='straight')return Math.max(0,Math.min(extent,center+slope));
   const phase=t*velocity*.85;
   const wave1=Math.sin(u*pi*2.1-phase);
   const wave2=Math.sin(u*pi*4.3+phase*.71+.6);
@@ -96,7 +101,7 @@ function brownPlane(t){
   const raw=shape==='flow'?wave1*.65+wave2*.20+wave3*.15:
      Math.sin(u*pi*1.4-phase)*.45+Math.sin(u*pi*3.3+phase*.6)*.35+
      Math.sin(u*pi*6.2-phase*.4)*.20;
-  return Math.max(0,Math.min(extent,center+amplitude*extent*.42*raw));
+  return Math.max(0,Math.min(extent,center+slope+amplitude*extent*.22*raw));
  }
  g.save();g.globalAlpha=alpha;g.fillStyle='#291b15';g.beginPath();
  if(side==='left')g.moveTo(0,0);
