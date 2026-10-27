@@ -4,10 +4,10 @@ let photo=null,photoURL=null,playing=false,recording=false,frame=0,start=0,raf=0
 const pi=Math.PI;
 
 // De Lichtval: elke carrouselslide heeft een eigen lichtval, vlak, tekst en animatiekeuze.
-const isLichtval=kind==='lichtval';
-const slideControlIds=['duration','amount','speed','intensity','message','lightOverPlane','planeOn','effectPlaneOrder','planeSide','planeShape','planeCover','planeTop','planeBottom','planeCurve','planeWave','planeSpeed','planeOpacity','photoOn','photoOrder','photoHalf','photoBlend','photoOpacity','photoZoom','photoX','photoY','signature'];
+const isLichtval=['lichtval','beweging','punten'].includes(kind);
+const slideControlIds=['duration','amount','speed','intensity','message','textStart','textFade','lightOverPlane','planeOn','effectPlaneOrder','planeSide','planeShape','planeCover','planeTop','planeBottom','planeCurve','planeWave','planeSpeed','planeOpacity','photoOn','photoOrder','photoHalf','photoBlend','photoOpacity','photoZoom','photoX','photoY','signature'];
 let slideIndex=0,slideData=[],slideFormat='carousel';
-const slideStore='odr-lichtval-slides-v1';
+const slideStore='odr-'+kind+'-slides-v1';
 function readSlide(){const o={mode:$('slideMode')?.value||'image'};for(const id of slideControlIds){const e=$(id);if(e)o[id]=e.type==='checkbox'?e.checked:e.value}return o}
 function writeSlide(o){if(!o)return;for(const id of slideControlIds){const e=$(id);if(e&&o[id]!==undefined){if(e.type==='checkbox')e.checked=!!o[id];else e.value=o[id]}}if($('slideMode'))$('slideMode').value=o.mode||'image'}
 function saveSlides(){if(!isLichtval)return;try{localStorage.setItem(slideStore,JSON.stringify({slides:slideData,format:slideFormat,index:slideIndex}))}catch(e){}}
@@ -28,11 +28,13 @@ function refreshSlideUI(){
  $('export').hidden=!video;
  $('play').disabled=!video;
  $('stop').disabled=!video;
- $('message').previousElementSibling.textContent=video?'Tekst aan het einde van de animatie (mag leeg blijven)':'Tekst op deze slide (mag leeg blijven)';
+ $('message').previousElementSibling.textContent=video?'Tekst in deze animatie (mag leeg blijven)':'Tekst op deze slide (mag leeg blijven)';
+ $('textTiming').hidden=!video;$('textStart').max=$('duration').value;if(+$('textStart').value>+$('duration').value)$('textStart').value=$('duration').value;updateTextTimingLabel();
  $('exportAllImages').textContent='↓ Exporteer alle '+slideData.length+' slides als PNG';
 }
+function updateTextTimingLabel(){$('textStartValue').textContent=Number($('textStart').value).toLocaleString('nl-NL')+' sec';$('textFadeValue').textContent=Number($('textFade').value).toLocaleString('nl-NL')+' sec'}
 function setFormat(format){slideFormat=format==='reel'?'reel':'carousel';c.height=slideFormat==='reel'?1920:1350;H=c.height;refreshSlideUI();saveSlides();render(0)}
-function exportPng(i){const original=slideIndex;if(i!==undefined){writeSlide(slideData[i]);slideIndex=i}render(0);const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='ODR-De-Lichtval-slide-'+String(slideIndex+1).padStart(2,'0')+'.png';document.body.appendChild(a);a.click();a.remove();if(i!==undefined){slideIndex=original;writeSlide(slideData[original]);render(0)}}
+function exportPng(i){const original=slideIndex;if(i!==undefined){writeSlide(slideData[i]);slideIndex=i}render(0);const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='ODR-'+kind+'-slide-'+String(slideIndex+1).padStart(2,'0')+'.png';document.body.appendChild(a);a.click();a.remove();if(i!==undefined){slideIndex=original;writeSlide(slideData[original]);render(0)}}
 function initSlides(){
  if(!isLichtval)return;
  const base=readSlide();let saved=null;try{saved=JSON.parse(localStorage.getItem(slideStore))}catch(e){}
@@ -43,6 +45,7 @@ function initSlides(){
  $('outputFormat').value=slideFormat;writeSlide(slideData[slideIndex]);
  $('outputFormat').addEventListener('change',e=>{stop();captureSlide();setFormat(e.target.value)});
  $('slideMode').addEventListener('change',()=>{stop();captureSlide();refreshSlideUI();render(0)});
+ $('duration').addEventListener('change',()=>{refreshSlideUI();captureSlide();render(0)});
  $('previousSlide').onclick=()=>{stop();captureSlide();selectSlide(slideIndex-1)};
  $('nextSlide').onclick=()=>{stop();captureSlide();selectSlide(slideIndex+1)};
  $('addSlide').onclick=()=>{stop();captureSlide();if(slideData.length>=20){$('status').textContent='Maximaal 20 slides.';return}slideData.splice(slideIndex+1,0,{...slideData[slideIndex],message:''});selectSlide(slideIndex+1)};
@@ -169,7 +172,7 @@ function brownPlane(t){
 }
 function drawText(t){
  const content=$('message').value.trim();if(!content)return;
- const dur=val('duration'),still=isLichtval&&slideFormat==='carousel'&&$('slideMode').value==='image',on=Math.max(0,dur-4.1),alpha=still?1:ease((t-on)/1.1);
+ const dur=val('duration'),still=isLichtval&&slideFormat==='carousel'&&$('slideMode').value==='image',on=Math.min(dur,Math.max(0,Number($('textStart')?.value??(dur-4.1)))),fade=Math.max(.1,Number($('textFade')?.value??1.1)),alpha=still?1:ease((t-on)/fade);
  if(alpha<=0)return;
  g.save();g.globalAlpha=alpha;g.textAlign='center';g.textBaseline='middle';g.fillStyle='#f2e1cf';
  let font=49,rows=wrap(content,850,font);
@@ -226,6 +229,6 @@ $('photoFile').addEventListener('change',()=>{
 $('photoClear').onclick=()=>{photo=null;if(photoURL)URL.revokeObjectURL(photoURL);photoURL=null;$('photoFile').value='';$('photoOn').checked=false;render(0)};
 $('play').onclick=preview;$('stop').onclick=()=>{stop();render(0)};
 $('export').onclick=exportVideo;
-for(const el of document.querySelectorAll('input,select,textarea')){const update=()=>{if(isLichtval&&slideControlIds.includes(el.id))captureSlide();if(!recording)render(playing?(performance.now()-start)/1000:0)};el.addEventListener('input',update);el.addEventListener('change',update)}
+for(const el of document.querySelectorAll('input,select,textarea')){const update=()=>{if(isLichtval&&el.id==='duration')refreshSlideUI();if(isLichtval&&(el.id==='textStart'||el.id==='textFade'))updateTextTimingLabel();if(isLichtval&&slideControlIds.includes(el.id))captureSlide();if(!recording)render(playing?(performance.now()-start)/1000:0)};el.addEventListener('input',update);el.addEventListener('change',update)}
 initSlides();document.fonts.ready.then(()=>render(0));render(0);
 })();
