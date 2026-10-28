@@ -188,7 +188,7 @@ function paintOverlay(t,force=false){
  const palette=$('palette').value,color=$('textColor').value;
  g.save();g.globalAlpha=alpha;g.textBaseline='middle';g.textAlign=align;
  g.fillStyle=color==='light'?'#e6d7c5':color==='dark'?'#291b15':palette==='beige'?'#291b15':'#e6d7c5';
- g.font='500 '+sz+'px "DM Sans",sans-serif';
+ g.font='400 '+sz+'px "DM Sans",system-ui,sans-serif';
  const margin=90,maxWidth=W-margin*2;
  const x=align==='left'?margin:align==='right'?W-margin:W/2;
  const rawLines=value.split(/\n/),lines=[];
