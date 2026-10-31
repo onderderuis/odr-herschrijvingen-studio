@@ -26,8 +26,24 @@ function makeSurface(){const c=document.createElement('canvas');c.width=W;c.heig
 const previousCanvas=makeSurface(),previousCtx=previousCanvas.getContext('2d');
 function gradient(c,s,t){const a=s.direction*Math.PI/180,u=t*(s.speed/100)*.65+s.phase/100*Math.PI*2,ax=Math.cos(a),ay=Math.sin(a);c.fillStyle=BEIGE;c.fillRect(0,0,W,H);
 if(s.motion==='sweep'||s.motion==='tide'){let shift=Math.sin(u)*.45,bend=s.motion==='tide'?Math.sin(u*.7)*.65:0;const angle=a+bend,dx=Math.cos(angle)*W,dy=Math.sin(angle)*H,ox=W/2+ax*W*shift,oy=H/2+ay*H*shift;const g=c.createLinearGradient(ox-dx/2,oy-dy/2,ox+dx/2,oy+dy/2),mid=1-s.balance/100,soft=s.softness/100*.7;g.addColorStop(clamp(mid-soft,0,1),BEIGE);g.addColorStop(clamp(mid+soft,0,1),BROWN);c.fillStyle=g;c.fillRect(0,0,W,H)}else{
-c.fillStyle=BROWN;c.globalAlpha=s.balance/100;c.fillRect(0,0,W,H);c.globalAlpha=1;
-for(let k=0;k<3;k++){const phase=u+k*2.15,x=W*(.5+Math.cos(phase)*.65),y=H*(.5+Math.sin(phase*.78+k)*.55),radius=W*(.55+s.softness/100*.9),dark=k!==1;const g=c.createRadialGradient(x,y,radius*(1-s.softness/100)*.24,x,y,radius);g.addColorStop(0,dark?'rgba(41,27,21,.95)':'rgba(230,215,197,.95)');g.addColorStop(1,dark?'rgba(41,27,21,0)':'rgba(230,215,197,0)');c.fillStyle=g;c.globalAlpha=dark?clamp(s.balance/60,.15,1):clamp((100-s.balance)/45,.15,1);c.fillRect(0,0,W,H)}c.globalAlpha=1}}
+// Keep the brand brown opaque; soften only the boundaries between the colours.
+c.globalAlpha=1;c.fillStyle=BROWN;c.fillRect(0,0,W,H);
+const softness=s.softness/100,balance=s.balance/100;
+const wave=u+a,x=W*(.5+Math.cos(wave)*.48),y=H*(.5+Math.sin(wave*.78)*.38);
+const lightRadius=W*(.65+(1-balance)*1.1+softness*.25);
+const light=c.createRadialGradient(x,y,0,x,y,lightRadius);
+light.addColorStop(0,BEIGE);
+light.addColorStop(.06+(1-softness)*.3,BEIGE);
+light.addColorStop(1,'rgba(230,215,197,0)');
+c.fillStyle=light;c.fillRect(0,0,W,H);
+// An opaque brown centre prevents beige layers from washing out every dark area.
+const darkX=W*(.5-Math.cos(wave)*.34),darkY=H*(.5-Math.sin(wave*.78)*.3);
+const darkRadius=W*(.38+balance*.65);
+const dark=c.createRadialGradient(darkX,darkY,0,darkX,darkY,darkRadius);
+dark.addColorStop(0,BROWN);
+dark.addColorStop(.04+balance*.16,BROWN);
+dark.addColorStop(1,'rgba(41,27,21,0)');
+c.fillStyle=dark;c.fillRect(0,0,W,H);c.globalAlpha=1}}
 function drawPhoto(c,s){const im=imageCache.get(s.photo);if(!im)return;c.save();c.globalAlpha=s.photoOpacity/100;c.globalCompositeOperation=s.photoBlend;let scale=s.photoStyle==='cover'?Math.max(W/im.width,H/im.height):Math.min(W*.82/im.width,H*.7/im.height);scale*=s.photoScale/100;const w=im.width*scale,h=im.height*scale,x=s.photoStyle==='cover'?(W-w)*s.photoX/100:W*s.photoX/100-w/2,y=s.photoStyle==='cover'?(H-h)*s.photoY/100:H*s.photoY/100-h/2;c.drawImage(im,x,y,w,h);c.restore()}
 function wrap(c,text,max){const rows=[];for(const line of text.split('\n')){let row='';for(const word of line.split(/\s+/).filter(Boolean)){let next=row?row+' '+word:word;if(c.measureText(next).width>max&&row){rows.push(row);row=''}if(c.measureText(word).width>max){for(const char of word){if(c.measureText(row+char).width>max&&row){rows.push(row);row=''}row+=char}}else row=row?row+' '+word:word}rows.push(row)}return rows}
 function drawText(c,s){const width=W*s.width/100,lineHeight=s.size*1.4;c.save();c.font='400 '+s.size+'px "'+s.font+'",sans-serif';const rows=wrap(c,s.text,width),height=rows.length*lineHeight,centerX=clamp(W*s.x/100,54+width/2,W-54-width/2),centerY=clamp(H*s.y/100,155+Math.min(height,H-400)/2,H-245-Math.min(height,H-400)/2);c.fillStyle=s.ink;c.textAlign=s.align;c.textBaseline='middle';const x=centerX+(s.align==='left'?-width/2:s.align==='right'?width/2:0);rows.forEach((row,j)=>c.fillText(row,x,centerY+(j-(rows.length-1)/2)*lineHeight));if(s.signature){c.font='400 23px "DM Sans",sans-serif';c.textAlign='left';c.fillText('onder de ruis.',100,H-110)}c.restore();return height>H-400}
